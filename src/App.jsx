@@ -60,14 +60,14 @@ export default function App() {
     const t = typeof topic === 'string' ? topic : ''
     setBook({ open: true, topic: SERVICE_OPTIONS.includes(t) ? t : PLAN_TOPIC[t] || '' })
   }
+  // returns the success message for the form; throws on failure (the form shows the error)
   const enquiryDone = async (data) => {
-    try {
-      const rec = await addEnquiry({ name: data.name, phone: data.phone, email: data.email.trim().toLowerCase(), city: data.city, topic: data.topic, employment: data.employment, income: data.income, time: data.time, message: data.message, source: page === 'home' ? 'Home form' : 'Contact form' })
-      setToast(`Thanks ${data.name?.split(' ')[0] || ''}! Your request ${rec.ref} has been received. We'll call you within one working day.${mode === 'demo' ? ' (Demo mode: saved in this browser only.)' : ''}`)
-    } catch (x) {
-      setToast(`Sorry, we couldn't send that: ${x.message}. Please try again or WhatsApp us.`)
-    }
+    const rec = await addEnquiry({ name: data.name, phone: data.phone, email: data.email.trim().toLowerCase(), city: data.city, topic: data.topic, employment: data.employment, income: data.income, time: data.time, message: data.message, source: page === 'home' ? 'Home form' : 'Contact form' })
+    const msg = `Thanks ${data.name?.split(' ')[0] || ''}! Your request ${rec.ref} has been received. We'll call you within one working day.${mode === 'demo' ? ' (Demo mode: saved in this browser only.)' : ''}`
+    setToast(msg)
+    return msg
   }
+
 
   return (
     <>

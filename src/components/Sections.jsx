@@ -111,21 +111,43 @@ export function Faq() {
 /* ---------- Contact / lead form ---------- */
 export const TOPICS = SERVICE_OPTIONS
 
+// keep only digits; turn "+91 98765 43210" or "098765 43210" into "9876543210"
+const cleanPhone = (e) => {
+  let d = e.target.value.replace(/\D/g, '')
+  if (d.length > 10 && d.startsWith('91')) d = d.slice(2)
+  if (d.length > 10 && d.startsWith('0')) d = d.slice(1)
+  e.target.value = d.slice(0, 10)
+}
+
 export function LeadForm({ defaultTopic = '', onDone, compact = false }) {
   const [validated, setValidated] = useState(false)
-  const submit = (e) => {
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState(null) // {ok, text}
+  const submit = async (e) => {
     e.preventDefault()
     const form = e.currentTarget
-    if (!form.checkValidity()) { setValidated(true); return }
+    setResult(null)
+    if (!form.checkValidity()) {
+      setValidated(true)
+      setResult({ ok: false, text: 'Please fix the fields marked in red above.' })
+      return
+    }
     const data = Object.fromEntries(new FormData(form))
-    onDone(data)
-    form.reset(); setValidated(false)
+    setBusy(true)
+    try {
+      const msg = await onDone(data)
+      setResult({ ok: true, text: msg || 'Thanks! Your request has been received.' })
+      form.reset(); setValidated(false)
+    } catch (x) {
+      console.error('[Finance Bros] form submit failed:', x)
+      setResult({ ok: false, text: `Sorry, we couldn't send that: ${x.message || x}. Please try again or WhatsApp us.` })
+    } finally { setBusy(false) }
   }
   return (
     <Form noValidate validated={validated} onSubmit={submit}>
       <Row className="g-3">
         <Col sm={6}><Form.Label htmlFor="lf-name">Full name</Form.Label><Form.Control id="lf-name" name="name" required placeholder="e.g. Rahul Sharma" /><Form.Control.Feedback type="invalid">Please enter your name.</Form.Control.Feedback></Col>
-        <Col sm={6}><Form.Label htmlFor="lf-phone">Mobile number</Form.Label><Form.Control id="lf-phone" name="phone" type="tel" required pattern="[6-9][0-9]{9}" placeholder="10-digit mobile" /><Form.Control.Feedback type="invalid">Enter a valid 10-digit Indian mobile number.</Form.Control.Feedback></Col>
+        <Col sm={6}><Form.Label htmlFor="lf-phone">Mobile number</Form.Label><Form.Control id="lf-phone" name="phone" type="tel" inputMode="numeric" required pattern="[6-9][0-9]{9}" placeholder="10-digit mobile" onInput={cleanPhone} /><Form.Control.Feedback type="invalid">Enter a valid 10-digit Indian mobile number.</Form.Control.Feedback></Col>
         <Col sm={6}><Form.Label htmlFor="lf-email">Email</Form.Label><Form.Control id="lf-email" name="email" type="email" required placeholder="you@email.com" /><Form.Control.Feedback type="invalid">Enter a valid email.</Form.Control.Feedback></Col>
         <Col sm={6}><Form.Label htmlFor="lf-city">City</Form.Label><Form.Control id="lf-city" name="city" placeholder="e.g. Pune" /></Col>
         <Col sm={6}>
@@ -165,7 +187,12 @@ export function LeadForm({ defaultTopic = '', onDone, compact = false }) {
             label="I agree to be contacted by Finance Bros on phone, WhatsApp or email about my request, and I accept the Privacy Policy."
             feedback="Please give consent so we can contact you." feedbackType="invalid" />
         </Col>
-        <Col xs={12}><Button type="submit" className="btn-olive w-100" size="lg"><i className="bi bi-send me-2" />Request a callback</Button></Col>
+        <Col xs={12}>
+          <Button type="submit" className="btn-olive w-100" size="lg" disabled={busy}>
+            {busy ? <><span className="spinner-border spinner-border-sm me-2" />Sending…</> : <><i className="bi bi-send me-2" />Request a callback</>}
+          </Button>
+          {result && <div className={`form-result ${result.ok ? 'ok' : 'err'}`} role="status"><i className={`bi ${result.ok ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} me-2`} />{result.text}</div>}
+        </Col>
       </Row>
     </Form>
   )
@@ -204,6 +231,11 @@ export function Contact({ onDone }) {
 }
 
 /* ---------- Footer ---------- */
+function ModeBadge() {
+  const { mode } = useStore()
+  return <span className={`mode-badge ${mode}`} title={mode === 'live' ? 'Connected to the database' : 'Data is saved in this browser only'}>{mode === 'live' ? '● Live' : '● Demo mode'}</span>
+}
+
 export function Footer({ onLegal }) {
   const cols = {
     Services: ['Loans & credit', 'SIP & mutual funds', 'Portfolio review', 'Financial planning', 'Insurance & tax'],
@@ -238,7 +270,7 @@ export function Footer({ onLegal }) {
         <div className="disclaimer py-4" id="disclosures">
           <p className="mb-2"><strong className="text-white">Disclosures.</strong> Mutual fund investments are subject to market risks; read all scheme-related documents carefully. Past performance does not guarantee future returns. Calculator results are illustrative and based on assumed rates.</p>
           <p className="mb-2">Personalised investment advice is offered only through a SEBI-registered Investment Adviser. Mutual fund distribution, where offered, is under an AMFI-registered ARN and is kept separate from advisory services. Loans are provided by RBI-regulated banks and NBFCs; Finance Bros is not a lender. Insurance is distributed through IRDAI-licensed intermediaries.</p>
-          <p className="mb-0">© {new Date().getFullYear()} Finance Bros. All rights reserved.</p>
+          <p className="mb-0 d-flex flex-wrap gap-2 align-items-center">© {new Date().getFullYear()} Finance Bros. All rights reserved.<ModeBadge /></p>
         </div>
       </Container>
     </footer>

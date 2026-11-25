@@ -135,6 +135,13 @@ alter table public.bookings    enable row level security;
 alter table public.reports     enable row level security;
 alter table public.payments    enable row level security;
 
+-- Table access for the website's API roles. New Supabase projects don't grant this
+-- automatically; Row Level Security (below) still decides which rows each person sees.
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on all tables in schema public to anon, authenticated;
+grant execute on all functions in schema public to anon, authenticated;
+revoke insert, update, delete on public.payments from anon, authenticated;   -- only the Razorpay webhook writes payments
+
 -- profiles: see/edit your own (name, phone, city only); admins see all
 drop policy if exists "own profile" on public.profiles;
 create policy "own profile" on public.profiles for select using (id = auth.uid() or public.is_admin());

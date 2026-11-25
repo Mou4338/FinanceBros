@@ -68,6 +68,7 @@ async function hash(s) {
 const Ctx = createContext(null)
 
 function DemoProvider({ children }) {
+  useEffect(() => { console.info('[Finance Bros] DEMO mode — no Supabase keys found, data is saved in this browser only') }, [])
   const [data, setData] = useState(load)
   useEffect(() => persist(data), [data])
   const update = useCallback((fn) => setData((d) => ({ ...d, ...fn(d) })), [])
@@ -129,9 +130,14 @@ function DemoProvider({ children }) {
    =================================================================== */
 const fromDb = (r) => (r ? { ...r, userId: r.user_id } : r)
 const toDb = ({ userId, ...r }) => ({ ...r, user_id: userId ?? null })
+// fail after 20 s instead of hanging silently
+const withTimeout = (p, ms = 20000) => Promise.race([
+  p, new Promise((_, rej) => setTimeout(() => rej(new Error('the server did not respond (check the Supabase URL and key)')), ms)),
+])
 const newId = () => (crypto.randomUUID ? crypto.randomUUID() : uid() + uid() + uid() + uid())
 
 function SupabaseProvider({ children }) {
+  useEffect(() => { console.info('[Finance Bros] LIVE mode — connected to', import.meta.env.VITE_SUPABASE_URL) }, [])
   const [data, setData] = useState({ users: [], session: null, plans: SEED.plans, consultants: [], enquiries: [], bookings: [], reports: [] })
   const [user, setUser] = useState(null)
   const isAdmin = user?.role === 'admin'
@@ -153,7 +159,7 @@ function SupabaseProvider({ children }) {
       supabase.from('bookings').select('*').order('date', { ascending: false }),
       supabase.from('reports').select('*').order('created', { ascending: false }),
     ]
-    if (profile.role === 'admin') q.push(supabase.from('profiles').select('id,name,email,role,created'))
+    if (profile.role === 'admin') q.push(supabase.from('profiles').select('id,name,email,phone,city,role,created').order('created', { ascending: false }))
     const [e, b, r, u] = await Promise.all(q)
     patch({ enquiries: (e.data || []).map(fromDb), bookings: (b.data || []).map(fromDb), reports: (r.data || []).map(fromDb), users: u?.data || [] })
   }, [])
@@ -169,7 +175,7 @@ function SupabaseProvider({ children }) {
   useEffect(() => {
     loadPublic()
     supabase.auth.getSession().then(({ data: s }) => loadProfile(s.session))
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => loadProfile(session))
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => { setTimeout(() => loadProfile(session), 0) })
     return () => sub.subscription.unsubscribe()
   }, [loadPublic, loadProfile])
 
@@ -196,7 +202,7 @@ function SupabaseProvider({ children }) {
     async addEnquiry(e) {
       const rec = { id: newId(), ref: ref('E'), status: 'New', created: iso(new Date()), userId: user?.id || null, source: 'Website', ...e }
       const { status, created, ...row } = rec // DB fills status & created
-      const { error } = await supabase.from('enquiries').insert(toDb(row))
+      const { error } = await withTimeout(supabase.from('enquiries').insert(toDb(row)))
       fail(error); refresh(); return rec
     },
     async setEnquiry(id, p) {
@@ -207,7 +213,7 @@ function SupabaseProvider({ children }) {
     async addBooking(b) {
       const rec = { id: newId(), ref: ref('B'), status: 'Requested', consultant: '', created: iso(new Date()), userId: user?.id || null, ...b }
       const { status, consultant, created, ...row } = rec
-      const { error } = await supabase.from('bookings').insert(toDb(row))
+      const { error } = await withTimeout(supabase.from('bookings').insert(toDb(row)))
       if (error?.code === '23505') throw new Error('Sorry, that slot was just booked. Please pick another time.')
       fail(error); refresh(); return rec
     },
@@ -224,7 +230,7 @@ function SupabaseProvider({ children }) {
     async addReport(r) {
       const rec = { id: newId(), ref: ref('R'), created: iso(new Date()), userId: user.id, ...r }
       const { created, ...row } = rec
-      const { error } = await supabase.from('reports').insert(toDb(row)); fail(error)
+      const { error } = await withTimeout(supabase.from('reports').insert(toDb(row))); fail(error)
       patch({ reports: [rec, ...data.reports] }); return rec
     },
 

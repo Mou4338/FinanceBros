@@ -27,24 +27,57 @@ function Gate({ onOk }) {
   )
 }
 
+// Who sent a record: a logged-in customer, an admin testing, or a guest (no login)
+function accountOf(r, users) {
+  const byId = r.userId && users.find((u) => u.id === r.userId)
+  if (byId) return { kind: byId.role === 'admin' ? 'admin' : 'customer', label: byId.role === 'admin' ? 'Admin (test)' : 'Logged-in customer', user: byId }
+  const byEmail = r.email && users.find((u) => u.email?.toLowerCase() === r.email.toLowerCase())
+  if (byEmail) return { kind: 'guest-account', label: 'Guest · has account', user: byEmail }
+  return { kind: 'guest', label: 'Guest', user: null }
+}
+const ACC_STYLE = { customer: 'st-success', admin: 'st-secondary', 'guest-account': 'st-info', guest: 'st-warning' }
+function AccountBadge({ acc }) {
+  return (
+    <div>
+      <span className={`st ${ACC_STYLE[acc.kind]}`}><i className={`bi ${acc.kind === 'guest' ? 'bi-person' : 'bi-person-check'} me-1`} />{acc.label}</span>
+      {acc.user && acc.kind !== 'admin' && <div className="small text-muted mt-1">{acc.user.name || acc.user.email}</div>}
+    </div>
+  )
+}
+const ACC_FILTERS = [['all', 'Everyone'], ['customer', 'Logged-in customers'], ['guest', 'Guests (no login)']]
+
 function Panel() {
   const { data, setEnquiry, setBooking, setPlan, resetDemo, mode } = useStore()
-  const [q, setQ] = useState(''), [fs, setFs] = useState('All'), [copied, setCopied] = useState('')
-  const match = (r) => (fs === 'All' || r.status === fs) && JSON.stringify(r).toLowerCase().includes(q.toLowerCase())
-  const enq = useMemo(() => data.enquiries.filter(match), [data.enquiries, q, fs]) // eslint-disable-line
-  const bks = useMemo(() => data.bookings.filter(match), [data.bookings, q, fs]) // eslint-disable-line
+  const [q, setQ] = useState(''), [fs, setFs] = useState('All'), [fa, setFa] = useState('all'), [copied, setCopied] = useState(''), [tab, setTab] = useState('enq')
+  const customers = useMemo(() => data.users.filter((u) => u.role !== 'admin'), [data.users])
+  const accMatch = (r) => {
+    if (fa === 'all') return true
+    const k = accountOf(r, data.users).kind
+    return fa === 'customer' ? k === 'customer' : k === 'guest' || k === 'guest-account'
+  }
+  const match = (r) => (fs === 'All' || r.status === fs) && accMatch(r) && JSON.stringify(r).toLowerCase().includes(q.toLowerCase())
+  const enq = useMemo(() => data.enquiries.filter(match), [data.enquiries, data.users, q, fs, fa]) // eslint-disable-line
+  const bks = useMemo(() => data.bookings.filter(match), [data.bookings, data.users, q, fs, fa]) // eslint-disable-line
+  const custRows = useMemo(() => customers
+    .filter((u) => JSON.stringify(u).toLowerCase().includes(q.toLowerCase()))
+    .map((u) => {
+      const mine = (r) => r.userId === u.id || r.email?.toLowerCase() === u.email?.toLowerCase()
+      return { ...u, enquiries: data.enquiries.filter(mine).length, bookings: data.bookings.filter(mine).length }
+    }), [customers, data.enquiries, data.bookings, q])
+  const withAcc = (rows) => rows.map((r) => ({ ...r, account: accountOf(r, data.users).label }))
   const copy = async (what, rows, cols) => { try { await navigator.clipboard.writeText(toCsv(rows, cols)); setCopied(what) } catch { setCopied('fail') } setTimeout(() => setCopied(''), 2500) }
 
   const kpis = [
     ['New enquiries', data.enquiries.filter((e) => e.status === 'New').length, 'bi-envelope-open'],
     ['Booking requests', data.bookings.filter((b) => b.status === 'Requested').length, 'bi-hourglass-split'],
     ['Confirmed calls', data.bookings.filter((b) => b.status === 'Confirmed').length, 'bi-calendar-check'],
-    ['Customers', data.users.length, 'bi-people'],
+    ['Customer accounts', customers.length, 'bi-people', 'cust'],
   ]
   const Filters = ({ statuses }) => (
     <Row className="g-2 mb-3">
-      <Col md={8}><InputGroup><InputGroup.Text><i className="bi bi-search" /></InputGroup.Text><Form.Control aria-label="Search" placeholder="Search name, phone, reference, topic…" value={q} onChange={(e) => setQ(e.target.value)} /></InputGroup></Col>
-      <Col md={4}><Form.Select aria-label="Filter by status" value={fs} onChange={(e) => setFs(e.target.value)}><option>All</option>{statuses.map((s) => <option key={s}>{s}</option>)}</Form.Select></Col>
+      <Col md={6}><InputGroup><InputGroup.Text><i className="bi bi-search" /></InputGroup.Text><Form.Control aria-label="Search" placeholder="Search name, phone, reference, topic…" value={q} onChange={(e) => setQ(e.target.value)} /></InputGroup></Col>
+      <Col md={3}><Form.Select aria-label="Filter by account" value={fa} onChange={(e) => setFa(e.target.value)}>{ACC_FILTERS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Form.Select></Col>
+      <Col md={3}><Form.Select aria-label="Filter by status" value={fs} onChange={(e) => setFs(e.target.value)}><option value="All">All statuses</option>{statuses.map((s) => <option key={s}>{s}</option>)}</Form.Select></Col>
     </Row>
   )
 
@@ -55,13 +88,19 @@ function Panel() {
         {mode === 'demo' && <Button className="btn-ghost" onClick={() => resetDemo()}><i className="bi bi-arrow-counterclockwise me-1" />Reset demo data</Button>}
       </div>
       <Row className="g-3 mb-4">
-        {kpis.map(([l, n, i]) => <Col xs={6} lg={3} key={l}><div className="kpi"><i className={`bi ${i}`} /><div className="n">{n}</div><div className="l">{l}</div></div></Col>)}
+        {kpis.map(([l, n, i, t]) => (
+          <Col xs={6} lg={3} key={l}>
+            {t ? <button type="button" className="kpi kpi-btn w-100 text-start" onClick={() => { setTab(t); setQ('') }}><i className={`bi ${i}`} /><div className="n">{n}</div><div className="l">{l} <i className="bi bi-arrow-right small" /></div></button>
+               : <div className="kpi"><i className={`bi ${i}`} /><div className="n">{n}</div><div className="l">{l}</div></div>}
+          </Col>
+        ))}
       </Row>
-      <Tab.Container defaultActiveKey="enq" onSelect={() => { setQ(''); setFs('All') }}>
+      <Tab.Container activeKey={tab} onSelect={(k) => { if (k) setTab(k); setQ(''); setFs('All'); setFa('all') }}>
         <div className="calc-shell">
           <Nav className="calc-nav">
             <Nav.Link eventKey="enq"><i className="bi bi-inbox" />Enquiries</Nav.Link>
             <Nav.Link eventKey="bk"><i className="bi bi-calendar-week" />Bookings</Nav.Link>
+            <Nav.Link eventKey="cust"><i className="bi bi-people" />Customers <span className="tag ms-1">{customers.length}</span></Nav.Link>
             <Nav.Link eventKey="price"><i className="bi bi-tag" />Services & pricing</Nav.Link>
             <Nav.Link eventKey="team"><i className="bi bi-person-badge" />Consultants</Nav.Link>
           </Nav>
@@ -70,11 +109,12 @@ function Panel() {
               <Filters statuses={STATUSES.enquiry} />
               <div className="scroll">
                 <table className="table adm align-middle stack">
-                  <thead><tr><th>Ref</th><th>Contact</th><th>Topic</th><th>Source</th><th>Date</th><th>Status</th></tr></thead>
+                  <thead><tr><th>Ref</th><th>Contact</th><th>Account</th><th>Topic</th><th>Source</th><th>Date</th><th>Status</th></tr></thead>
                   <tbody>{enq.map((e) => (
                     <tr key={e.id}>
                       <td className="fw-semibold">{e.ref}</td>
                       <td><div className="fw-semibold">{e.name}</div><div className="small text-muted">{e.phone} · {e.email}</div></td>
+                      <td><AccountBadge acc={accountOf(e, data.users)} /></td>
                       <td>{e.topic}{e.message && <div className="small text-muted">{e.message}</div>}</td>
                       <td>{e.source}</td><td className="text-nowrap">{fmtDate(e.created)}</td>
                       <td><Form.Select size="sm" aria-label="Enquiry status" value={e.status} onChange={(x) => safe(setEnquiry(e.id, { status: x.target.value }))}>{STATUSES.enquiry.map((s) => <option key={s}>{s}</option>)}</Form.Select></td>
@@ -82,17 +122,18 @@ function Panel() {
                 </table>
               </div>
               {enq.length === 0 && <p className="text-center text-muted">No enquiries match.</p>}
-              <Button size="sm" className="btn-ghost" onClick={() => copy('enq', enq, ['ref', 'name', 'phone', 'email', 'city', 'topic', 'source', 'status', 'created'])}><i className="bi bi-clipboard me-1" />{copied === 'enq' ? 'Copied as CSV' : 'Copy as CSV'}</Button>
+              <Button size="sm" className="btn-ghost" onClick={() => copy('enq', withAcc(enq), ['ref', 'name', 'phone', 'email', 'city', 'account', 'topic', 'source', 'status', 'created'])}><i className="bi bi-clipboard me-1" />{copied === 'enq' ? 'Copied as CSV' : 'Copy as CSV'}</Button>
             </Tab.Pane>
             <Tab.Pane eventKey="bk">
               <Filters statuses={STATUSES.booking} />
               <div className="scroll">
                 <table className="table adm align-middle stack">
-                  <thead><tr><th>Ref</th><th>Customer</th><th>Service</th><th>Slot</th><th>Consultant</th><th>Status</th></tr></thead>
+                  <thead><tr><th>Ref</th><th>Customer</th><th>Account</th><th>Service</th><th>Slot</th><th>Consultant</th><th>Status</th></tr></thead>
                   <tbody>{bks.map((b) => (
                     <tr key={b.id}>
                       <td className="fw-semibold">{b.ref}</td>
-                      <td><div className="fw-semibold">{b.name}</div><div className="small text-muted">{b.phone}</div></td>
+                      <td><div className="fw-semibold">{b.name}</div><div className="small text-muted">{b.phone} · {b.email}</div></td>
+                      <td><AccountBadge acc={accountOf(b, data.users)} /></td>
                       <td>{b.service}<div className="small text-muted">{b.mode}</div></td>
                       <td className="text-nowrap">{fmtDate(b.date)}<div className="small text-muted">{fmtSlot(b.slot)}</div></td>
                       <td><Form.Select size="sm" aria-label="Assign consultant" value={b.consultant || ''} onChange={(x) => safe(setBooking(b.id, { consultant: x.target.value }))}><option value="">Unassigned</option>{data.consultants.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Form.Select></td>
@@ -101,7 +142,27 @@ function Panel() {
                 </table>
               </div>
               {bks.length === 0 && <p className="text-center text-muted">No bookings match.</p>}
-              <Button size="sm" className="btn-ghost" onClick={() => copy('bk', bks, ['ref', 'name', 'phone', 'email', 'service', 'mode', 'date', 'slot', 'status', 'consultant'])}><i className="bi bi-clipboard me-1" />{copied === 'bk' ? 'Copied as CSV' : 'Copy as CSV'}</Button>
+              <Button size="sm" className="btn-ghost" onClick={() => copy('bk', withAcc(bks), ['ref', 'name', 'phone', 'email', 'account', 'service', 'mode', 'date', 'slot', 'status', 'consultant'])}><i className="bi bi-clipboard me-1" />{copied === 'bk' ? 'Copied as CSV' : 'Copy as CSV'}</Button>
+            </Tab.Pane>
+            <Tab.Pane eventKey="cust">
+              <p className="small text-muted mb-3">People who created an account on the website. Admin accounts are not counted.</p>
+              <InputGroup className="mb-3"><InputGroup.Text><i className="bi bi-search" /></InputGroup.Text><Form.Control aria-label="Search customers" placeholder="Search name, email, phone, city…" value={q} onChange={(e) => setQ(e.target.value)} /></InputGroup>
+              {custRows.length === 0 ? (
+                <div className="text-center py-4"><i className="bi bi-people fs-1 text-olive" /><p className="mt-2 text-muted mb-0">{customers.length ? 'No customers match.' : 'No customer accounts yet. They appear here when someone signs up on the website.'}</p></div>
+              ) : (
+                <div className="scroll">
+                  <table className="table adm align-middle stack">
+                    <thead><tr><th>Customer</th><th>Mobile</th><th>City</th><th>Joined</th><th>Enquiries</th><th>Bookings</th></tr></thead>
+                    <tbody>{custRows.map((u) => (
+                      <tr key={u.id}>
+                        <td><div className="fw-semibold">{u.name || '—'}</div><div className="small text-muted">{u.email}</div></td>
+                        <td>{u.phone || '—'}</td><td>{u.city || '—'}</td><td className="text-nowrap">{fmtDate(u.created)}</td>
+                        <td>{u.enquiries}</td><td>{u.bookings}</td>
+                      </tr>))}</tbody>
+                  </table>
+                </div>
+              )}
+              {custRows.length > 0 && <Button size="sm" className="btn-ghost" onClick={() => copy('cust', custRows, ['name', 'email', 'phone', 'city', 'created', 'enquiries', 'bookings'])}><i className="bi bi-clipboard me-1" />{copied === 'cust' ? 'Copied as CSV' : 'Copy as CSV'}</Button>}
             </Tab.Pane>
             <Tab.Pane eventKey="price">
               <p className="small text-muted">Changes update the Pricing section on the website immediately.</p>
