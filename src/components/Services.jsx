@@ -16,7 +16,7 @@ export const SERVICES = [
       ['Credit cards', 'Card comparison, eligibility and benefits'],
       ['Credit score guidance', 'Credit profile education and improvement checklist'],
     ],
-    extras: ['Loan rejection analysis', 'EMI reduction planning', 'Prepayment vs regular EMI', 'Foreclosure cost check', 'Documentation help', 'Application tracking'],
+    extras: ['Loan rejection analysis', 'EMI reduction planning', 'Flat vs reducing rate check', 'Prepayment vs regular EMI', 'Foreclosure cost check', 'Documentation help', 'Application tracking'],
     note: 'Loans are facilitated through partner banks and NBFCs regulated by the RBI. We never pull your credit report without your written consent.',
   },
   {
@@ -34,7 +34,7 @@ export const SERVICES = [
       ['Step-up SIP planning', 'Model rising contributions'],
       ['Goal-based investing', 'Retirement, education and home goals'],
     ],
-    extras: ['SIP vs lumpsum', 'Fund overlap analysis', 'Expense ratio comparison', 'Rolling returns', 'Benchmark comparison', 'Investment horizon check'],
+    extras: ['Life-stage fund selection', '7-point fund check', '4-question investment check', 'SIP vs lumpsum', 'Fund overlap analysis', 'Expense ratio comparison', 'Rolling returns', 'Benchmark comparison', 'Investment horizon check'],
     note: 'Comparisons are educational. We do not label any fund as "best for you" unless delivered under the appropriate SEBI-registered advisory or AMFI distribution model.',
   },
   {
@@ -52,7 +52,7 @@ export const SERVICES = [
       ['Rebalancing education', 'Understand allocation drift'],
       ['Tax efficiency education', 'Relevant tax considerations'],
     ],
-    extras: ['Portfolio Health Report (PDF)', 'Quarterly review calls'],
+    extras: ['Portfolio Health Report (PDF)', 'Quarterly review calls', 'IPO homework checklist', 'Gold allocation check'],
     note: 'Personalised investment advice is provided only through a SEBI-registered Investment Adviser.',
   },
   {
@@ -70,7 +70,7 @@ export const SERVICES = [
       ['Savings & wealth plan', 'Step-by-step wealth building'],
       ['Net worth tracking', 'Assets minus liabilities, yearly'],
     ],
-    extras: ['NPS & PPF planning', 'FD/RD comparison', 'Gold ETF education'],
+    extras: ['NPS & PPF planning', 'FD/RD comparison', 'Gold ETF education', 'Parents 50+ emergency & nominee check', 'Unclaimed money recovery help'],
     note: 'Plans are based on the information you share and are reviewed with you on a call.',
   },
   {
@@ -88,7 +88,7 @@ export const SERVICES = [
       ['Credit card consulting', 'Pick cards that fit your spending'],
       ['Financial literacy', 'Courses and learning resources'],
     ],
-    extras: ['Premium comparison', 'Nominee & documentation checklist'],
+    extras: ['Premium comparison', 'Nominee & documentation checklist', 'Claim rejection & Ombudsman help'],
     note: 'Insurance is distributed only through IRDAI-licensed intermediaries; ITR filing is done by qualified tax professionals.',
   },
 ]

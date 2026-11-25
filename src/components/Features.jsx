@@ -4,7 +4,7 @@ import { IG_URL } from './Header.jsx'
 export function StatsStrip() {
   const stats = [
     ['₹0', 'to start — calculators & basic assessment are free'],
-    ['20+', 'financial calculators and tools'],
+    ['25', 'free calculators, tools & checklists'],
     ['5', 'service verticals under one roof'],
     ['15 min', 'free intro call with an expert'],
   ]

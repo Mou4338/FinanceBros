@@ -87,3 +87,88 @@ export function eligibility({ income, existingEmi, rate, years, foir }) {
   const e1 = emi(100000, rate, years * 12) // EMI per lakh
   return { maxEmi: room, maxLoan: e1 ? (room / e1) * 100000 : 0 }
 }
+
+/* ---------------- more tools ---------------- */
+
+/** Months needed to repay P at rate r% with fixed payment pay (Infinity if payment too small) */
+export function monthsToRepay(P, annualRate, pay) {
+  const r = annualRate / 12 / 100
+  if (pay <= 0) return Infinity
+  if (r === 0) return Math.ceil(P / pay)
+  if (pay <= P * r) return Infinity
+  return Math.ceil(-Math.log(1 - (r * P) / pay) / Math.log(1 + r))
+}
+
+/** Balance transfer: remaining cost now vs after moving to a new rate (with a one-time fee) */
+export function balanceTransfer({ outstanding, curRate, newRate, months, feePct, feeFlat }) {
+  const e1 = emi(outstanding, curRate, months), e2 = emi(outstanding, newRate, months)
+  const fee = outstanding * feePct / 100 + feeFlat
+  const cost1 = e1 * months, cost2 = e2 * months + fee
+  const saving = cost1 - cost2
+  const breakEven = e1 - e2 > 0 ? Math.ceil(fee / (e1 - e2)) : Infinity
+  return { e1, e2, fee, cost1, cost2, saving, breakEven }
+}
+
+/** Prepayment: keep the EMI and shorten tenure, by a one-time lump sum and/or extra every month */
+export function prepayment({ outstanding, rate, months, lump, extra }) {
+  const e = emi(outstanding, rate, months)
+  const base = e * months
+  const r = rate / 12 / 100
+  let bal = Math.max(0, outstanding - lump), m = 0, paid = lump
+  while (bal > 0.5 && m < 1200) {
+    const pay = Math.min(bal * (1 + r), e + extra)
+    bal = bal * (1 + r) - pay
+    paid += pay; m++
+  }
+  return { emi: e, monthsLeft: m, monthsSaved: Math.max(0, months - m), interestBase: base - outstanding, interestNew: paid - outstanding, saving: base - paid }
+}
+
+/** Credit card: months and interest to clear a balance with a fixed monthly payment */
+export function cardPayoff({ balance, monthlyRate, pay }) {
+  const r = monthlyRate / 100
+  let bal = balance, m = 0, interest = 0
+  if (pay <= bal * r) return { months: Infinity, interest: Infinity }
+  while (bal > 0.5 && m < 600) { const i = bal * r; interest += i; bal = bal + i - Math.min(pay, bal + i); m++ }
+  return { months: m, interest }
+}
+
+export const cagr = (start, end, years) => (start > 0 && end > 0 && years > 0 ? (Math.pow(end / start, 1 / years) - 1) * 100 : 0)
+
+/** Fixed deposit / compound interest. freq = compounding times per year */
+export function compound(P, annualRate, years, freq = 4) {
+  const value = P * Math.pow(1 + annualRate / 100 / freq, freq * years)
+  const rows = []
+  for (let y = 1; y <= Math.ceil(years); y++) rows.push({ year: `Y${y}`, invested: P, value: Math.round(P * Math.pow(1 + annualRate / 100 / freq, freq * Math.min(y, years))) })
+  return { value, interest: value - P, rows, effective: (Math.pow(1 + annualRate / 100 / freq, freq) - 1) * 100 }
+}
+
+export const futureCost = (today, inflation, years) => today * Math.pow(1 + inflation / 100, years)
+
+/** PPF: yearly deposit at start of year, interest compounded yearly */
+export function ppf(yearly, rate, years = 15) {
+  let bal = 0, invested = 0
+  const rows = []
+  for (let y = 1; y <= years; y++) { bal = (bal + yearly) * (1 + rate / 100); invested += yearly; rows.push({ year: `Y${y}`, invested: Math.round(invested), value: Math.round(bal) }) }
+  return { value: bal, invested, interest: bal - invested, rows }
+}
+
+/* Income tax, FY 2026-27 (unchanged in Budget 2026), resident individual below 60,
+   income up to ₹50 lakh (no surcharge). Includes Sec 87A rebate and 4% cess. */
+function slabTax(income, slabs) {
+  let tax = 0, prev = 0
+  for (const [upto, rate] of slabs) { if (income > prev) tax += (Math.min(income, upto) - prev) * rate; prev = upto }
+  return tax
+}
+export function taxNew(gross, salaried = true) {
+  const taxable = Math.max(0, gross - (salaried ? 75000 : 0))
+  let tax = slabTax(taxable, [[400000, 0], [800000, 0.05], [1200000, 0.10], [1600000, 0.15], [2000000, 0.20], [2400000, 0.25], [Infinity, 0.30]])
+  if (taxable <= 1200000) tax = 0                                       // 87A rebate up to ₹60,000
+  else tax = Math.min(tax, taxable - 1200000)                            // marginal relief just above ₹12 lakh
+  return { taxable, tax: tax * 1.04 }
+}
+export function taxOld(gross, deductions, salaried = true) {
+  const taxable = Math.max(0, gross - (salaried ? 50000 : 0) - deductions)
+  let tax = slabTax(taxable, [[250000, 0], [500000, 0.05], [1000000, 0.20], [Infinity, 0.30]])
+  if (taxable <= 500000) tax = 0                                        // 87A rebate up to ₹12,500
+  return { taxable, tax: tax * 1.04 }
+}

@@ -498,3 +498,45 @@ h1, h2, h3, h4, h5 { color: var(--c-ink); }
 .kpi-btn { cursor: pointer; transition: .18s; }
 .kpi-btn:hover { border-color: var(--c-forest); box-shadow: var(--shadow); }
 .adm .st { white-space: nowrap; }
+
+.note-box { min-width: 170px; }
+.note-box textarea { min-height: 36px; font-size: .85rem; resize: vertical; }
+.spin { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.adm { min-width: 1100px; }
+@media (max-width: 600px) { .adm { min-width: 0; } }
+.adm td:first-child { white-space: nowrap; }
+
+/* ---------- tools hub ---------- */
+.tool-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+@media (max-width: 575.98px) { .tool-groups { grid-template-columns: minmax(0, 1fr); } }
+.tool-group { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 14px; box-shadow: var(--shadow-sm); }
+.tg-title { font-weight: 800; font-size: .92rem; color: var(--c-ink); display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.tg-title i { color: var(--c-forest); }
+.tg-list { display: grid; gap: 4px; }
+.tg-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; background: none; border-radius: 10px; padding: 9px 10px; font-weight: 600; font-size: .92rem; color: var(--c-ink); min-height: 40px; }
+.tg-item i { color: var(--muted); }
+.tg-item:hover { background: var(--c-grey); }
+.tg-item.on { background: var(--c-forest); color: #fff; }
+.tg-item.on i { color: #fff; }
+.tool-head { padding: 18px clamp(18px, 3vw, 32px); border-bottom: 1px solid var(--line); background: var(--c-grey); }
+
+.free-strip { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 16px 20px; box-shadow: var(--shadow-sm); }
+.price-card .badge.tag-lime { font-size: .72rem; }
+
+/* ---------- Instagram reels ---------- */
+.reel-card { background: #fff; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow-sm); height: 100%; display: flex; flex-direction: column; }
+.reel-frame { position: relative; width: 100%; height: 640px; background: var(--c-grey); }
+.reel-frame::before { content: 'Loading reel…'; position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: .9rem; }
+.reel-frame iframe { position: relative; width: 100%; height: 100%; border: 0; display: block; }
+.reel-card > div:last-child { margin-top: auto; border-top: 1px solid var(--line); }
+@media (max-width: 575.98px) { .reel-frame { height: 600px; } }
+
+.check-row { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: #fff; cursor: pointer; transition: .15s; }
+.check-row .form-check-input { margin-top: 4px; flex: none; width: 1.2em; height: 1.2em; }
+.check-row.on { border-color: var(--c-forest); background: var(--c-green-tint); }
+.pay-table { min-width: 720px; font-size: .86rem; }
+.pay-table tr.pick td { background: var(--c-green-tint) !important; }
+.claim-steps { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 12px; }
+.claim-steps li { display: flex; gap: 12px; align-items: flex-start; }
+.cs-n { width: 30px; height: 30px; flex: none; border-radius: 50%; background: var(--c-forest); color: #fff; font-weight: 800; display: grid; place-items: center; }

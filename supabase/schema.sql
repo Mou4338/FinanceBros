@@ -211,6 +211,39 @@ end $$;
 grant execute on function public.cancel_booking(uuid) to authenticated;
 
 -- =====================================================================
+-- Admin tools: internal notes, deleting spam, managing admins
+-- =====================================================================
+alter table public.enquiries add column if not exists admin_notes text;
+alter table public.bookings  add column if not exists admin_notes text;
+
+drop policy if exists "admin delete enquiries" on public.enquiries;
+create policy "admin delete enquiries" on public.enquiries for delete using (public.is_admin());
+drop policy if exists "admin delete bookings" on public.bookings;
+create policy "admin delete bookings" on public.bookings for delete using (public.is_admin());
+
+-- add / remove an admin by email (only admins may call it; the last admin can't be removed)
+create or replace function public.set_user_role(target_email text, new_role text) returns text
+language plpgsql security definer set search_path = public as $$
+declare
+  tid uuid;
+  old_role text;
+  admins int;
+begin
+  if not public.is_admin() then raise exception 'Only admins can change roles.'; end if;
+  if new_role not in ('customer', 'admin') then raise exception 'Invalid role.'; end if;
+  select id, role into tid, old_role from public.profiles where lower(email) = lower(trim(target_email));
+  if tid is null then raise exception 'No account with that email. Ask them to sign up on the website first.'; end if;
+  if new_role = 'customer' and old_role = 'admin' then
+    select count(*) into admins from public.profiles where role = 'admin';
+    if admins <= 1 then raise exception 'You cannot remove the last admin.'; end if;
+  end if;
+  update public.profiles set role = new_role where id = tid;
+  return new_role;
+end $$;
+revoke execute on function public.set_user_role(text, text) from public, anon;
+grant execute on function public.set_user_role(text, text) to authenticated;
+
+-- =====================================================================
 -- Starting data (edit freely)
 -- =====================================================================
 insert into public.plans (id, name, price, per, d, f, featured, sort) values
@@ -223,6 +256,8 @@ on conflict (id) do nothing;
 insert into public.consultants (name, expertise)
 select * from (values ('Loans desk', 'Loans & credit'), ('Investments desk', 'SIP, mutual funds, portfolio'), ('Planning desk', 'Budgeting, retirement, insurance')) v
 where not exists (select 1 from public.consultants);
+
+-- Per-service pricing: run supabase/pricing.sql after this file.
 
 -- =====================================================================
 -- AFTER you create your own account on the website, make it an admin:

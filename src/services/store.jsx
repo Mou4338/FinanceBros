@@ -9,8 +9,9 @@
 */
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase, LIVE } from './supabase.js'
+import { PLAN_CATALOGUE } from './plans.js'
 
-const KEY = 'fb-data-v1'
+const KEY = 'fb-data-v2'
 export const STATUSES = { enquiry: ['New', 'Contacted', 'In progress', 'Closed'], booking: ['Requested', 'Confirmed', 'Completed', 'Cancelled'] }
 export const SERVICE_OPTIONS = ['Personal loan', 'Home loan', 'Business loan', 'Education loan', 'Credit card / score', 'SIP & mutual funds', 'Portfolio review', 'Financial planning', 'Insurance', 'Tax / ITR', 'Other']
 export const DEMO_ADMIN_PIN = '2580'
@@ -22,12 +23,7 @@ const daysAgo = (n) => iso(new Date(today.getTime() - n * 864e5))
 const SEED = {
   users: [],
   session: null,
-  plans: [
-    { id: 'free', name: 'Free', price: 0, per: '', d: 'For anyone getting started.', f: ['All calculators', 'Indicative health check', 'Learning centre & guides', 'Instagram explainers'] },
-    { id: 'consult', name: 'Consultation', price: 499, per: '/ session', d: 'One focused 45-min expert call.', f: ['Loan, SIP or planning topic', 'Review of your numbers', 'Written summary after the call', 'WhatsApp follow-up for 7 days'], featured: true },
-    { id: 'report', name: 'Portfolio Report', price: 1499, per: '/ report', d: 'A full Portfolio Health Report.', f: ['Allocation & overlap analysis', 'Goal mapping', 'PDF report', '30-min walkthrough call'] },
-    { id: 'annual', name: 'Annual Plan', price: 4999, per: '/ year', d: 'Ongoing planning for the year.', f: ['Complete financial plan', 'Quarterly reviews', 'Loan & insurance check-ups', 'Priority WhatsApp support'] },
-  ],
+  plans: PLAN_CATALOGUE,
   consultants: [
     { id: 'c1', name: 'Loans desk', expertise: 'Loans & credit', active: true },
     { id: 'c2', name: 'Investments desk', expertise: 'SIP, mutual funds, portfolio', active: true },
@@ -120,6 +116,16 @@ function DemoProvider({ children }) {
     // ---------- admin (FR-10) ----------
     setPlan(id, patch) { update((d) => ({ plans: d.plans.map((p) => (p.id === id ? { ...p, ...patch } : p)) })) },
     resetDemo() { update(() => structuredClone(SEED)) },
+    deleteEnquiry(id) { update((d) => ({ enquiries: d.enquiries.filter((e) => e.id !== id) })); return Promise.resolve() },
+    deleteBooking(id) { update((d) => ({ bookings: d.bookings.filter((b) => b.id !== id) })); return Promise.resolve() },
+    setRole(email, role) {
+      const u = data.users.find((x) => x.email === email.trim().toLowerCase())
+      if (!u) return Promise.reject(new Error('No account with that email. Ask them to sign up on the website first.'))
+      if (role !== 'admin' && data.users.filter((x) => x.role === 'admin').length <= 1 && u.role === 'admin') return Promise.reject(new Error('You cannot remove the last admin.'))
+      update((d) => ({ users: d.users.map((x) => (x.id === u.id ? { ...x, role } : x)) }))
+      return Promise.resolve(role)
+    },
+    reload() { return Promise.resolve() },
   }
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>
 }
@@ -239,6 +245,20 @@ function SupabaseProvider({ children }) {
       const { error } = await supabase.from('plans').update(p).eq('id', id); fail(error)
     },
     resetDemo() {},
+    async deleteEnquiry(id) {
+      const { error } = await supabase.from('enquiries').delete().eq('id', id); fail(error)
+      patch({ enquiries: data.enquiries.filter((e) => e.id !== id) })
+    },
+    async deleteBooking(id) {
+      const { error } = await supabase.from('bookings').delete().eq('id', id); fail(error)
+      patch({ bookings: data.bookings.filter((b) => b.id !== id) })
+    },
+    // add or remove an admin (checked again on the server by set_user_role)
+    async setRole(email, role) {
+      const { error } = await supabase.rpc('set_user_role', { target_email: email.trim().toLowerCase(), new_role: role })
+      fail(error); await loadPrivate(user); return role
+    },
+    async reload() { if (user) await loadPrivate(user) },
   }
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>
 }

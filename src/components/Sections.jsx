@@ -37,36 +37,77 @@ export function Journey() {
 }
 
 /* ---------- Pricing ---------- */
+const PRICE_SERVICES = [
+  ['loans', 'Loans & credit', 'bi-bank', 'Home loan'],
+  ['sip', 'SIP & mutual funds', 'bi-graph-up-arrow', 'SIP & mutual funds'],
+  ['wealth', 'Investment & portfolio', 'bi-pie-chart', 'Portfolio review'],
+  ['planning', 'Financial planning', 'bi-clipboard-check', 'Financial planning'],
+  ['insurance', 'Insurance & tax', 'bi-shield-check', 'Insurance'],
+]
+// older databases may not have `service` yet
+const LEGACY_SERVICE = { free: 'all', consult: 'planning', report: 'wealth', annual: 'planning' }
+const TOPIC_BY_PLAN = { 'tax-check': 'Tax / ITR', itr: 'Tax / ITR', 'credit-fix': 'Credit card / score' }
+
+function PlanCard({ p, onBook, topic }) {
+  return (
+    <div className={`price-card ${p.featured ? 'featured' : ''}`}>
+      <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+        <h4 className="h5 mb-0">{p.name}</h4>
+        {p.featured && <span className="badge tag-lime">Most booked</span>}
+      </div>
+      <div className="price">{(p.fromPrice || p.id === 'itr') && <small className="me-1">from</small>}₹{Number(p.price).toLocaleString('en-IN')} <small>{p.per}</small></div>
+      <p className="small mb-0" style={{ opacity: .8 }}>{p.d}</p>
+      <ul>{(p.f || []).map((x) => <li key={x}><i className="bi bi-check-lg" />{x}</li>)}</ul>
+      <Button className={`${p.featured ? 'btn-lime' : 'btn-olive'} w-100`} onClick={() => onBook(TOPIC_BY_PLAN[p.id] || topic)}>Book this</Button>
+    </div>
+  )
+}
+
 export function Pricing({ onBook }) {
   const { data } = useStore()
-  const PLANS = data.plans.map((p) => ({ ...p, price: p.price ? '₹' + p.price.toLocaleString('en-IN') : '₹0', cta: { free: 'Start free', consult: 'Book a session', report: 'Get my report', annual: 'Join annual plan' }[p.id] || 'Book', href: p.id === 'free' ? '#tools' : undefined }))
+  const [svc, setSvc] = useState('all')
+  const plans = [...data.plans].map((p) => ({ ...p, service: p.service || LEGACY_SERVICE[p.id] || 'planning' })).sort((a, b) => (a.sort ?? 99) - (b.sort ?? 99))
+  const free = plans.find((p) => p.service === 'all')
+  const shown = PRICE_SERVICES.filter(([k]) => svc === 'all' || svc === k)
   return (
     <section className="section bg-olive-50" id="pricing">
       <Container>
-        <div className="text-center mb-5">
+        <div className="text-center mb-4">
           <span className="eyebrow"><i className="bi bi-tag" />Transparent pricing</span>
-          <h2 className="section-title">Simple fees. No surprises.</h2>
-          <p className="lead-sm mx-auto">Any commission or partner compensation is disclosed before you act.</p>
+          <h2 className="section-title">Simple fees for every service.</h2>
+          <p className="lead-sm mx-auto">Start free. Pay only for the help you choose. Any commission or partner fee is disclosed before you act.</p>
         </div>
-        <Row className="g-4">
-          {PLANS.map((p) => (
-            <Col md={6} xl={3} key={p.name}>
-              <div className={`price-card ${p.featured ? 'featured' : ''}`}>
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h3 className="h5 mb-0">{p.name}</h3>
-                  {p.featured && <Badge bg="" className="tag-lime" style={{ color: 'var(--olive-950)' }}>Most booked</Badge>}
-                </div>
-                <div className="price">{p.price} <small>{p.per}</small></div>
-                <p className="small mb-0" style={{ opacity: .8 }}>{p.d}</p>
-                <ul>{p.f.map((x) => <li key={x}><i className="bi bi-check-lg" />{x}</li>)}</ul>
-                {p.href
-                  ? <Button className="btn-ghost w-100" href={p.href}>{p.cta}</Button>
-                  : <Button className={`${p.featured ? 'btn-lime' : 'btn-olive'} w-100`} onClick={() => onBook(p.name)}>{p.cta}</Button>}
-              </div>
-            </Col>
+
+        {free && (
+          <div className="free-strip mb-4">
+            <div className="d-flex align-items-center gap-3">
+              <span className="feature-icon"><i className="bi bi-gift" /></span>
+              <div><div className="fw-bold">Free, always: ₹0</div><div className="small" style={{ color: 'var(--muted)' }}>{free.f.join(' · ')}</div></div>
+            </div>
+            <Button className="btn-ghost" href="#calculators">Start free <i className="bi bi-arrow-right" /></Button>
+          </div>
+        )}
+
+        <div className="d-flex flex-wrap gap-2 justify-content-center mb-4">
+          <button type="button" className={`chip ${svc === 'all' ? 'on' : ''}`} onClick={() => setSvc('all')} aria-pressed={svc === 'all'}>All services</button>
+          {PRICE_SERVICES.map(([k, t, icon]) => (
+            <button type="button" key={k} className={`chip ${svc === k ? 'on' : ''}`} onClick={() => setSvc(k)} aria-pressed={svc === k}><i className={`bi ${icon} me-1`} />{t}</button>
           ))}
-        </Row>
-        <p className="text-center small mt-4 mb-0" style={{ color: 'var(--muted)' }}>Prices include GST where applicable. Sample pricing for launch.</p>
+        </div>
+
+        {shown.map(([k, title, icon, topic]) => {
+          const list = plans.filter((p) => p.service === k)
+          if (!list.length) return null
+          return (
+            <div className="mb-5" key={k}>
+              <h3 className="h4 mb-3 d-flex align-items-center gap-2"><span className="feature-icon" style={{ width: 38, height: 38, fontSize: '1rem' }}><i className={`bi ${icon}`} /></span>{title}</h3>
+              <Row className="g-4">
+                {list.map((p) => <Col md={6} xl={4} key={p.id}><PlanCard p={p} onBook={onBook} topic={topic} /></Col>)}
+              </Row>
+            </div>
+          )
+        })}
+        <p className="text-center small mb-0" style={{ color: 'var(--muted)' }}>Prices include GST where applicable. Launch pricing, which may change.</p>
       </Container>
     </section>
   )

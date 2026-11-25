@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Container, Row, Col, Form, Nav, Tab, Button } from 'react-bootstrap'
 import { ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts'
+import { BalanceTransferCalc, PrepaymentCalc, CardPayoffCalc, CagrCalc, FdCalc, InflationCalc, PpfCalc, NetWorthCalc, TaxRegimeCalc } from './MoreCalculators.jsx'
+import { takePendingTool } from '../utils/toolNav.js'
+import { PaymentMethodTool, UnclaimedTool, IpoTool, BeforeInvestTool, FamilyTool, ClaimTool, LifeStageTool, MfChecksTool } from './Checklists.jsx'
 import { emi, amortisation, sip, lumpsum, retirement, eligibility, inr, inrShort } from '../utils/finance.js'
 
 const OLIVE = '#1F7A45', OLIVE_L = '#8CC9A0', LIME = '#B9C2BC', DEEP = '#1C201E'
 
-function SliderRow({ id, label, value, onChange, min, max, step = 1, prefix = '', suffix = '' }) {
+export function SliderRow({ id, label, value, onChange, min, max, step = 1, prefix = '', suffix = '' }) {
   return (
     <div className="slider-row">
       <div className="top">
@@ -331,57 +334,83 @@ function GoalCalc() {
   )
 }
 
-const TABS = [
-  ['emi', 'bi-house-door', 'EMI', EmiCalc],
-  ['sip', 'bi-graph-up-arrow', 'SIP & Lumpsum', SipCalc],
-  ['elig', 'bi-patch-check', 'Loan eligibility', EligibilityCalc],
-  ['retire', 'bi-sunset', 'Retirement', RetirementCalc],
-  ['emergency', 'bi-life-preserver', 'Emergency fund', EmergencyCalc],
-  ['budget', 'bi-wallet2', 'Budget 50/30/20', BudgetCalc],
-  ['goal', 'bi-flag', 'Savings goal', GoalCalc],
+// All tools, grouped. key → used for deep links from Learn and Home (openTool)
+export const TOOL_GROUPS = [
+  { name: 'Loans & credit', icon: 'bi-bank', tools: [
+    ['emi', 'bi-house-door', 'EMI calculator', EmiCalc],
+    ['elig', 'bi-patch-check', 'Loan eligibility', EligibilityCalc],
+    ['bt', 'bi-arrow-left-right', 'Balance transfer', BalanceTransferCalc],
+    ['prepay', 'bi-skip-forward', 'Prepayment savings', PrepaymentCalc],
+    ['card', 'bi-credit-card', 'Credit card payoff', CardPayoffCalc],
+  ] },
+  { name: 'Investing', icon: 'bi-graph-up-arrow', tools: [
+    ['sip', 'bi-graph-up-arrow', 'SIP, step-up & lumpsum', SipCalc],
+    ['cagr', 'bi-percent', 'CAGR', CagrCalc],
+    ['fd', 'bi-safe', 'FD / compound interest', FdCalc],
+    ['inflation', 'bi-cart', 'Inflation', InflationCalc],
+  ] },
+  { name: 'Planning', icon: 'bi-clipboard-check', tools: [
+    ['retire', 'bi-sunset', 'Retirement', RetirementCalc],
+    ['goal', 'bi-flag', 'Savings goal', GoalCalc],
+    ['emergency', 'bi-life-preserver', 'Emergency fund', EmergencyCalc],
+    ['budget', 'bi-wallet2', 'Budget 50/30/20', BudgetCalc],
+    ['networth', 'bi-bar-chart-steps', 'Net worth', NetWorthCalc],
+  ] },
+  { name: 'Tax & savings schemes', icon: 'bi-receipt', tools: [
+    ['tax', 'bi-receipt', 'Old vs new tax regime', TaxRegimeCalc],
+    ['ppf', 'bi-piggy-bank', 'PPF', PpfCalc],
+  ] },
+  { name: 'Money checklists', icon: 'bi-ui-checks', tools: [
+    ['invest4', 'bi-question-circle', '4 questions before you invest', BeforeInvestTool],
+    ['mf7', 'bi-list-check', '7 checks before buying a fund', MfChecksTool],
+    ['lifestage', 'bi-people', 'Which fund for your life stage', LifeStageTool],
+    ['ipo', 'bi-bell', 'IPO checklist (not GMP)', IpoTool],
+    ['pay', 'bi-arrow-left-right', 'Which payment method?', PaymentMethodTool],
+    ['unclaimed', 'bi-search', 'Find unclaimed money', UnclaimedTool],
+    ['family', 'bi-people', 'Parents 50+: emergency ready?', FamilyTool],
+    ['claim', 'bi-shield-exclamation', 'Insurance claim rejected?', ClaimTool],
+  ] },
 ]
-
-const LIBRARY = {
-  'Loan': ['Balance transfer', 'Prepayment savings', 'Debt consolidation', 'Credit card repayment'],
-  'Investment': ['SIP vs lumpsum', 'CAGR', 'XIRR', 'Inflation', 'Compound interest'],
-  'Planning & funds': ['Net worth', 'Tax regime comparison', 'Fund overlap checker', 'NPS / PPF planner'],
-}
+const ALL_TOOLS = TOOL_GROUPS.flatMap((g) => g.tools.map((t) => [...t, g.name]))
 
 export default function Calculators({ onBook }) {
+  const [active, setActive] = useState(() => {
+    const k = takePendingTool()
+    return ALL_TOOLS.some((t) => t[0] === k) ? k : 'emi'
+  })
+  const [, , title, Tool, group] = ALL_TOOLS.find((t) => t[0] === active)
+  const pick = (k) => { setActive(k); document.getElementById('tool-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
   return (
     <section className="section" id="tools">
       <Container>
         <Row className="mb-4 g-3 align-items-end">
           <Col lg={8}>
-            <span className="eyebrow"><i className="bi bi-calculator" />Free financial calculators</span>
+            <span className="eyebrow"><i className="bi bi-calculator" />{ALL_TOOLS.length} free tools & checklists</span>
             <h2 className="section-title mb-2">Run your numbers in seconds.</h2>
-            <p className="lead-sm mb-0">Drag the sliders or type exact values. Everything is calculated in your browser — nothing is stored.</p>
+            <p className="lead-sm mb-0">Pick a tool, then drag the sliders or type exact values. Everything is calculated in your browser, and nothing you type is stored.</p>
           </Col>
         </Row>
-        <Tab.Container defaultActiveKey="emi">
-          <div className="calc-shell mb-4">
-            <Nav className="calc-nav" role="tablist">
-              {TABS.map(([k, icon, l]) => (
-                <Nav.Link key={k} eventKey={k}><i className={`bi ${icon}`} />{l}</Nav.Link>
-              ))}
-            </Nav>
-            <Tab.Content className="calc-body">
-              {TABS.map(([k, , , C]) => <Tab.Pane eventKey={k} key={k} mountOnEnter><C /></Tab.Pane>)}
-            </Tab.Content>
-          </div>
-        </Tab.Container>
-
-        <Row className="g-4 align-items-stretch">
-          {Object.entries(LIBRARY).map(([cat, list]) => (
-            <Col md={4} key={cat}>
-              <h6 className="fw-bold mb-3">{cat} tools</h6>
-              <div className="d-grid gap-2 tool-list">
-                {list.map((t) => <div className="tool-item" key={t}><i className="bi bi-calculator text-olive" />{t}<span className="soon">Coming soon</span></div>)}
+        <div className="tool-groups mb-4">
+          {TOOL_GROUPS.map((g) => (
+            <div className="tool-group" key={g.name}>
+              <div className="tg-title"><i className={`bi ${g.icon}`} />{g.name}</div>
+              <div className="tg-list">
+                {g.tools.map(([k, icon, label]) => (
+                  <button type="button" key={k} className={`tg-item ${active === k ? 'on' : ''}`} onClick={() => pick(k)} aria-pressed={active === k}>
+                    <i className={`bi ${icon}`} />{label}
+                  </button>
+                ))}
               </div>
-            </Col>
+            </div>
           ))}
-        </Row>
-        <div className="text-center mt-4">
+        </div>
+        <div className="calc-shell mb-4" id="tool-panel">
+          <div className="tool-head">
+            <div><div className="small fw-semibold" style={{ color: 'var(--muted)' }}>{group}</div><h3 className="h4 mb-0">{title}</h3></div>
+          </div>
+          <div className="calc-body"><Tool key={active} /></div>
+        </div>
+        <div className="text-center">
           <Button className="btn-olive" onClick={onBook}>Get these numbers reviewed by an expert <i className="bi bi-arrow-right ms-1" /></Button>
         </div>
       </Container>

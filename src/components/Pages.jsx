@@ -2,6 +2,7 @@ import { Container, Row, Col, Button } from 'react-bootstrap'
 import { SERVICES } from './Services.jsx'
 import { LeadForm } from './Sections.jsx'
 import { IG_URL } from './Header.jsx'
+import { openTool } from '../utils/toolNav.js'
 
 /* Banner at the top of every inner page */
 export function PageHeader({ crumb, title, sub, icon }) {
@@ -142,12 +143,12 @@ export function HomeServices({ setService }) {
 /* Home: calculator shortcuts */
 export function HomeTools() {
   const tools = [
-    ['bi-house-door', 'EMI calculator', 'Monthly EMI, total interest, yearly breakdown'],
-    ['bi-graph-up-arrow', 'SIP & lumpsum', 'Including step-up SIP'],
-    ['bi-patch-check', 'Loan eligibility', 'How much you can borrow'],
-    ['bi-sunset', 'Retirement', 'Corpus and monthly SIP needed'],
-    ['bi-wallet2', 'Budget 50/30/20', 'Needs, wants and savings'],
-    ['bi-heart-pulse', 'Portfolio health check', 'Score out of 100 in a minute'],
+    ['emi', 'bi-house-door', 'EMI calculator', 'Monthly EMI, total interest, yearly breakdown'],
+    ['tax', 'bi-receipt', 'Old vs new tax regime', 'FY 2026-27 slabs, on your numbers'],
+    ['sip', 'bi-graph-up-arrow', 'SIP & lumpsum', 'Including step-up SIP'],
+    ['prepay', 'bi-skip-forward', 'Loan prepayment', 'Interest and years you save'],
+    ['retire', 'bi-sunset', 'Retirement', 'Corpus and monthly SIP needed'],
+    ['health', 'bi-heart-pulse', 'Portfolio health check', 'Score out of 100 in a minute'],
   ]
   return (
     <section className="section pt-0">
@@ -155,16 +156,16 @@ export function HomeTools() {
         <div className="tools-band">
           <Row className="g-4 align-items-center">
             <Col lg={4}>
-              <span className="eyebrow"><i className="bi bi-calculator" />Free tools</span>
+              <span className="eyebrow"><i className="bi bi-calculator" />25 free tools</span>
               <h2 className="section-title text-white mb-3">Run your numbers before you decide.</h2>
               <p className="mb-4" style={{ color: '#A9B0AB' }}>Free, private, and calculated in your browser.</p>
               <Button className="btn-lime" href="#calculators">Open calculators <i className="bi bi-arrow-right ms-1" /></Button>
             </Col>
             <Col lg={8}>
               <Row className="g-3">
-                {tools.map(([i, t, d]) => (
+                {tools.map(([k, i, t, d]) => (
                   <Col sm={6} key={t}>
-                    <a className="tool-tile" href={t.includes('health') ? '#health-check' : '#calculators'}>
+                    <a className="tool-tile" href={k === 'health' ? '#health-check' : '#calculators'} onClick={(e) => { if (k !== 'health') { e.preventDefault(); openTool(k) } }}>
                       <i className={`bi ${i}`} />
                       <span><strong>{t}</strong><small>{d}</small></span>
                       <i className="bi bi-arrow-up-right ms-auto arrow" />
