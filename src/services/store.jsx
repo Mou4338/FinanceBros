@@ -154,7 +154,12 @@ function SupabaseProvider({ children }) {
       supabase.from('plans').select('*').order('sort'),
       supabase.from('consultants').select('*').eq('active', true),
     ])
-    patch({ plans: plans.data?.length ? plans.data : SEED.plans, consultants: consultants.data || [] })
+    // built-in catalogue fills any plan the database doesn't have yet; database values win
+    const db = plans.data || []
+    const byId = Object.fromEntries(db.map((p) => [p.id, p]))
+    const merged = [...SEED.plans.map((c) => (byId[c.id] ? { ...c, ...byId[c.id], service: byId[c.id].service && byId[c.id].service !== 'planning' ? byId[c.id].service : c.service } : c)),
+      ...db.filter((p) => !SEED.plans.some((c) => c.id === p.id))]
+    patch({ plans: merged, consultants: consultants.data || [] })
   }, [])
 
   // RLS decides what comes back: own rows for customers, everything for admins
@@ -242,7 +247,11 @@ function SupabaseProvider({ children }) {
 
     async setPlan(id, p) {
       patch({ plans: data.plans.map((x) => (x.id === id ? { ...x, ...p } : x)) })
-      const { error } = await supabase.from('plans').update(p).eq('id', id); fail(error)
+      const cur = data.plans.find((x) => x.id === id) || {}
+      const { id: _i, fromPrice, ...rest } = { ...cur, ...p }
+      let { error } = await supabase.from('plans').upsert({ id, ...rest })
+      if (error) ({ error } = await supabase.from('plans').update(p).eq('id', id))
+      fail(error)
     },
     resetDemo() {},
     async deleteEnquiry(id) {

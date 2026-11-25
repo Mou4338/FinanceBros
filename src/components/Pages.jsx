@@ -156,7 +156,7 @@ export function HomeTools() {
         <div className="tools-band">
           <Row className="g-4 align-items-center">
             <Col lg={4}>
-              <span className="eyebrow"><i className="bi bi-calculator" />25 free tools</span>
+              <span className="eyebrow"><i className="bi bi-calculator" />33 free tools</span>
               <h2 className="section-title text-white mb-3">Run your numbers before you decide.</h2>
               <p className="mb-4" style={{ color: '#A9B0AB' }}>Free, private, and calculated in your browser.</p>
               <Button className="btn-lime" href="#calculators">Open calculators <i className="bi bi-arrow-right ms-1" /></Button>

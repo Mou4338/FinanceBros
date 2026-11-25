@@ -46,7 +46,7 @@ const PRICE_SERVICES = [
 ]
 // older databases may not have `service` yet
 const LEGACY_SERVICE = { free: 'all', consult: 'planning', report: 'wealth', annual: 'planning' }
-const TOPIC_BY_PLAN = { 'tax-check': 'Tax / ITR', itr: 'Tax / ITR', 'credit-fix': 'Credit card / score' }
+const TOPIC_BY_PLAN = { 'tax-check': 'Tax / ITR', itr: 'Tax / ITR', 'itr-cg': 'Tax / ITR', notice: 'Tax / ITR', 'credit-fix': 'Credit card / score' }
 
 function PlanCard({ p, onBook, topic }) {
   return (

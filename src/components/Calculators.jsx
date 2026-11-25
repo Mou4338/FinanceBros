@@ -3,6 +3,7 @@ import { Container, Row, Col, Form, Nav, Tab, Button } from 'react-bootstrap'
 import { ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts'
 import { BalanceTransferCalc, PrepaymentCalc, CardPayoffCalc, CagrCalc, FdCalc, InflationCalc, PpfCalc, NetWorthCalc, TaxRegimeCalc } from './MoreCalculators.jsx'
 import { takePendingTool } from '../utils/toolNav.js'
+import { RentBuyCalc, FlatRateCalc, SwpCalc, ChildEduCalc, HraCalc, CapGainsCalc, TermCoverCalc, SipDelayCalc } from './ToolsExtra.jsx'
 import { PaymentMethodTool, UnclaimedTool, IpoTool, BeforeInvestTool, FamilyTool, ClaimTool, LifeStageTool, MfChecksTool } from './Checklists.jsx'
 import { emi, amortisation, sip, lumpsum, retirement, eligibility, inr, inrShort } from '../utils/finance.js'
 
@@ -342,22 +343,30 @@ export const TOOL_GROUPS = [
     ['bt', 'bi-arrow-left-right', 'Balance transfer', BalanceTransferCalc],
     ['prepay', 'bi-skip-forward', 'Prepayment savings', PrepaymentCalc],
     ['card', 'bi-credit-card', 'Credit card payoff', CardPayoffCalc],
+    ['rentbuy', 'bi-houses', 'Rent vs buy a home', RentBuyCalc],
+    ['flatrate', 'bi-exclamation-diamond', 'Flat vs reducing rate', FlatRateCalc],
   ] },
   { name: 'Investing', icon: 'bi-graph-up-arrow', tools: [
     ['sip', 'bi-graph-up-arrow', 'SIP, step-up & lumpsum', SipCalc],
     ['cagr', 'bi-percent', 'CAGR', CagrCalc],
     ['fd', 'bi-safe', 'FD / compound interest', FdCalc],
     ['inflation', 'bi-cart', 'Inflation', InflationCalc],
+    ['delay', 'bi-hourglass-split', 'Cost of delaying your SIP', SipDelayCalc],
+    ['swp', 'bi-cash-stack', 'SWP: monthly income', SwpCalc],
   ] },
   { name: 'Planning', icon: 'bi-clipboard-check', tools: [
     ['retire', 'bi-sunset', 'Retirement', RetirementCalc],
     ['goal', 'bi-flag', 'Savings goal', GoalCalc],
+    ['child', 'bi-mortarboard', 'Child education', ChildEduCalc],
     ['emergency', 'bi-life-preserver', 'Emergency fund', EmergencyCalc],
     ['budget', 'bi-wallet2', 'Budget 50/30/20', BudgetCalc],
     ['networth', 'bi-bar-chart-steps', 'Net worth', NetWorthCalc],
   ] },
-  { name: 'Tax & savings schemes', icon: 'bi-receipt', tools: [
+  { name: 'Tax, insurance & schemes', icon: 'bi-receipt', tools: [
     ['tax', 'bi-receipt', 'Old vs new tax regime', TaxRegimeCalc],
+    ['hra', 'bi-building', 'HRA exemption', HraCalc],
+    ['cg', 'bi-graph-down-arrow', 'Mutual fund capital gains tax', CapGainsCalc],
+    ['term', 'bi-shield-check', 'Term insurance cover', TermCoverCalc],
     ['ppf', 'bi-piggy-bank', 'PPF', PpfCalc],
   ] },
   { name: 'Money checklists', icon: 'bi-ui-checks', tools: [

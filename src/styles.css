@@ -540,3 +540,15 @@ h1, h2, h3, h4, h5 { color: var(--c-ink); }
 .claim-steps { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 12px; }
 .claim-steps li { display: flex; gap: 12px; align-items: flex-start; }
 .cs-n { width: 30px; height: 30px; flex: none; border-radius: 50%; background: var(--c-forest); color: #fff; font-weight: 800; display: grid; place-items: center; }
+
+/* service clarity blocks */
+.cl-box{background:#fff;border:1px solid #E4E8E5;border-radius:14px;padding:16px 18px}
+.cl-box h6{font-weight:700;margin-bottom:10px}
+.cl-list{margin:0;padding-left:1.1rem}
+.cl-list li{margin-bottom:4px;color:#2b302d}
+.cl-step{background:#fff;border:1px solid #E4E8E5;border-radius:14px;padding:14px 16px;position:relative}
+.cl-num{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#111;color:#fff;font-size:.8rem;font-weight:700;margin-bottom:8px}
+.cl-tool{cursor:pointer;border:1px solid #cfd8d2;background:#fff}
+.cl-tool:hover{background:#111;color:#fff;border-color:#111}
+.cl-faq .accordion-button{font-weight:600}
+.cl-price{background:#F2F6F3;border:1px solid #DCE7E0;border-radius:14px;padding:16px 18px}
