@@ -12,7 +12,7 @@ import Admin from './components/Admin.jsx'
 import { LearningCentre, LegalModal } from './components/Learn.jsx'
 import { Journey, Pricing, Faq, Contact, Footer } from './components/Sections.jsx'
 import About from './components/About.jsx'
-import { PageHeader, HomeForm, HomeServices, HomeTools, PageCta } from './components/Pages.jsx'
+import { PageHeader, HomeIntro, HomeForm, HomeServices, HomeTools, PageCta } from './components/Pages.jsx'
 import { useStore, SERVICE_OPTIONS } from './services/store.jsx'
 
 const SERVICE_TOPIC = { loans: 'Personal loan', sip: 'SIP & mutual funds', wealth: 'Portfolio review', planning: 'Financial planning', insurance: 'Insurance' }
@@ -28,7 +28,7 @@ const hashName = () => window.location.hash.replace('#', '')
 const routeOf = () => ROUTES[hashName()] || 'home'
 
 export default function App() {
-  const { addEnquiry } = useStore()
+  const { addEnquiry, mode } = useStore()
   const [page, setPage] = useState(routeOf)
   const [service, setService] = useState('loans')
   const [book, setBook] = useState({ open: false, topic: '' })
@@ -60,9 +60,13 @@ export default function App() {
     const t = typeof topic === 'string' ? topic : ''
     setBook({ open: true, topic: SERVICE_OPTIONS.includes(t) ? t : PLAN_TOPIC[t] || '' })
   }
-  const enquiryDone = (data) => {
-    const rec = addEnquiry({ name: data.name, phone: data.phone, email: data.email, city: data.city, topic: data.topic, employment: data.employment, income: data.income, time: data.time, message: data.message, source: 'Contact form' })
-    setToast(`Thanks ${data.name?.split(' ')[0] || ''}! Enquiry ${rec.ref} saved. Track it under My Account (demo mode: stored in this browser).`)
+  const enquiryDone = async (data) => {
+    try {
+      const rec = await addEnquiry({ name: data.name, phone: data.phone, email: data.email.trim().toLowerCase(), city: data.city, topic: data.topic, employment: data.employment, income: data.income, time: data.time, message: data.message, source: page === 'home' ? 'Home form' : 'Contact form' })
+      setToast(`Thanks ${data.name?.split(' ')[0] || ''}! Your request ${rec.ref} has been received. We'll call you within one working day.${mode === 'demo' ? ' (Demo mode: saved in this browser only.)' : ''}`)
+    } catch (x) {
+      setToast(`Sorry, we couldn't send that: ${x.message}. Please try again or WhatsApp us.`)
+    }
   }
 
   return (
@@ -72,12 +76,12 @@ export default function App() {
         {page === 'home' && <>
           <Hero onBook={() => openBook()} onService={setService} />
           <StatsStrip />
-          <HomeForm onDone={enquiryDone} />
+          <HomeIntro />
           <HomeServices setService={setService} />
           <Features />
           <HomeTools />
           <Journey />
-          <PageCta onBook={() => openBook()} />
+          <HomeForm onDone={enquiryDone} />
         </>}
         {page === 'services' && <>
           <PageHeader crumb="Services" icon="bi-grid" title="Our services" sub="Loans, SIPs & mutual funds, portfolio reviews, financial planning, insurance and tax — explained simply." />

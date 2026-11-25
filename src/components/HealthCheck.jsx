@@ -138,7 +138,7 @@ export default function HealthCheck({ onBook }) {
               </div>
               <p className="small mt-auto" style={{ color: 'var(--muted)' }}>Indicative and educational only. It does not assess suitability or recommend changes — that needs a professional review.</p>
               {user ? (
-                <Button className="btn-ghost w-100 mb-2" disabled={!!saved} onClick={() => setSaved(addReport({ type: 'Portfolio health check', score, total, profile, alloc: ASSETS.map(([k, , c]) => [k, Math.round(pct(k)), c]), notes: checks.map((c) => `${c.ok ? '✓' : '!'} ${c.t}: ${c.d}`) }))}>
+                <Button className="btn-ghost w-100 mb-2" disabled={!!saved} onClick={async () => setSaved(await addReport({ type: 'Portfolio health check', score, total, profile, alloc: ASSETS.map(([k, , c]) => [k, Math.round(pct(k)), c]), notes: checks.map((c) => `${c.ok ? '✓' : '!'} ${c.t}: ${c.d}`) }))}>
                   <i className="bi bi-bookmark-plus me-2" />{saved ? `Saved to My Account (${saved.ref})` : 'Save this result to My Account'}
                 </Button>
               ) : (

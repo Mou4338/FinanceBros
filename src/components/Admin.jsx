@@ -3,6 +3,9 @@ import { Container, Row, Col, Form, Button, Nav, Tab, InputGroup } from 'react-b
 import { useStore, STATUSES, DEMO_ADMIN_PIN, fmtDate, fmtSlot } from '../services/store.jsx'
 import { StatusBadge } from './Account.jsx'
 
+// run a save without blocking the UI; log failures
+const safe = (p) => Promise.resolve(p).catch((e) => console.error('Save failed:', e))
+
 const toCsv = (rows, cols) => [cols.join(','), ...rows.map((r) => cols.map((c) => `"${String(r[c] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n')
 
 function Gate({ onOk }) {
@@ -25,7 +28,7 @@ function Gate({ onOk }) {
 }
 
 function Panel() {
-  const { data, setEnquiry, setBooking, setPlan, resetDemo } = useStore()
+  const { data, setEnquiry, setBooking, setPlan, resetDemo, mode } = useStore()
   const [q, setQ] = useState(''), [fs, setFs] = useState('All'), [copied, setCopied] = useState('')
   const match = (r) => (fs === 'All' || r.status === fs) && JSON.stringify(r).toLowerCase().includes(q.toLowerCase())
   const enq = useMemo(() => data.enquiries.filter(match), [data.enquiries, q, fs]) // eslint-disable-line
@@ -49,7 +52,7 @@ function Panel() {
     <>
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <div><h2 className="section-title mb-1">Admin dashboard</h2><p className="mb-0" style={{ color: 'var(--muted)' }}>Leads, bookings, consultants and pricing.</p></div>
-        <Button className="btn-ghost" onClick={() => resetDemo()}><i className="bi bi-arrow-counterclockwise me-1" />Reset demo data</Button>
+        {mode === 'demo' && <Button className="btn-ghost" onClick={() => resetDemo()}><i className="bi bi-arrow-counterclockwise me-1" />Reset demo data</Button>}
       </div>
       <Row className="g-3 mb-4">
         {kpis.map(([l, n, i]) => <Col xs={6} lg={3} key={l}><div className="kpi"><i className={`bi ${i}`} /><div className="n">{n}</div><div className="l">{l}</div></div></Col>)}
@@ -74,7 +77,7 @@ function Panel() {
                       <td><div className="fw-semibold">{e.name}</div><div className="small text-muted">{e.phone} · {e.email}</div></td>
                       <td>{e.topic}{e.message && <div className="small text-muted">{e.message}</div>}</td>
                       <td>{e.source}</td><td className="text-nowrap">{fmtDate(e.created)}</td>
-                      <td><Form.Select size="sm" aria-label="Enquiry status" value={e.status} onChange={(x) => setEnquiry(e.id, { status: x.target.value })}>{STATUSES.enquiry.map((s) => <option key={s}>{s}</option>)}</Form.Select></td>
+                      <td><Form.Select size="sm" aria-label="Enquiry status" value={e.status} onChange={(x) => safe(setEnquiry(e.id, { status: x.target.value }))}>{STATUSES.enquiry.map((s) => <option key={s}>{s}</option>)}</Form.Select></td>
                     </tr>))}</tbody>
                 </table>
               </div>
@@ -92,8 +95,8 @@ function Panel() {
                       <td><div className="fw-semibold">{b.name}</div><div className="small text-muted">{b.phone}</div></td>
                       <td>{b.service}<div className="small text-muted">{b.mode}</div></td>
                       <td className="text-nowrap">{fmtDate(b.date)}<div className="small text-muted">{fmtSlot(b.slot)}</div></td>
-                      <td><Form.Select size="sm" aria-label="Assign consultant" value={b.consultant} onChange={(x) => setBooking(b.id, { consultant: x.target.value })}><option value="">Unassigned</option>{data.consultants.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Form.Select></td>
-                      <td><Form.Select size="sm" aria-label="Booking status" value={b.status} onChange={(x) => setBooking(b.id, { status: x.target.value })}>{STATUSES.booking.map((s) => <option key={s}>{s}</option>)}</Form.Select></td>
+                      <td><Form.Select size="sm" aria-label="Assign consultant" value={b.consultant || ''} onChange={(x) => safe(setBooking(b.id, { consultant: x.target.value }))}><option value="">Unassigned</option>{data.consultants.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Form.Select></td>
+                      <td><Form.Select size="sm" aria-label="Booking status" value={b.status} onChange={(x) => safe(setBooking(b.id, { status: x.target.value }))}>{STATUSES.booking.map((s) => <option key={s}>{s}</option>)}</Form.Select></td>
                     </tr>))}</tbody>
                 </table>
               </div>
@@ -107,8 +110,8 @@ function Panel() {
                   <Col md={6} key={p.id}>
                     <div className="rec">
                       <Form.Label htmlFor={`pl-${p.id}`} className="fw-bold">{p.name}</Form.Label>
-                      <InputGroup className="mb-2"><InputGroup.Text>₹</InputGroup.Text><Form.Control id={`pl-${p.id}`} type="number" min={0} value={p.price} onChange={(e) => setPlan(p.id, { price: Math.max(0, Number(e.target.value) || 0) })} /><InputGroup.Text>{p.per || 'free'}</InputGroup.Text></InputGroup>
-                      <Form.Control aria-label={`${p.name} description`} value={p.d} onChange={(e) => setPlan(p.id, { d: e.target.value })} />
+                      <InputGroup className="mb-2"><InputGroup.Text>₹</InputGroup.Text><Form.Control id={`pl-${p.id}`} type="number" min={0} value={p.price} onChange={(e) => safe(setPlan(p.id, { price: Math.max(0, Number(e.target.value) || 0) }))} /><InputGroup.Text>{p.per || 'free'}</InputGroup.Text></InputGroup>
+                      <Form.Control aria-label={`${p.name} description`} value={p.d} onChange={(e) => safe(setPlan(p.id, { d: e.target.value }))} />
                     </div>
                   </Col>
                 ))}
@@ -124,16 +127,33 @@ function Panel() {
         </div>
       </Tab.Container>
       {copied === 'fail' && <p className="small text-danger mt-2">Copy was blocked by the browser.</p>}
-      <p className="small mt-3" style={{ color: 'var(--muted)' }}>Demo mode: data lives in this browser. Rows marked "Sample" are example data.</p>
+      {mode === 'demo' && <p className="small mt-3" style={{ color: 'var(--muted)' }}>Demo mode: data lives in this browser. Rows marked "Sample" are example data.</p>}
     </>
   )
 }
 
+function NoAccess({ loggedIn }) {
+  return (
+    <Row className="justify-content-center"><Col md={6} lg={5}>
+      <div className="contact-card text-center">
+        <div className="feature-icon mx-auto mb-3" style={{ width: 56, height: 56, fontSize: '1.5rem' }}><i className="bi bi-shield-lock" /></div>
+        <h3 className="h4">Admin panel</h3>
+        <p style={{ color: 'var(--muted)' }}>{loggedIn ? 'Your account does not have admin access.' : 'Log in with an admin account to continue.'}</p>
+        {!loggedIn && <Button className="btn-olive" href="#account">Log in</Button>}
+      </div>
+    </Col></Row>
+  )
+}
+
 export default function Admin() {
+  const { mode, user, isAdmin } = useStore()
   const [ok, setOk] = useState(false)
+  let body
+  if (mode === 'live') body = isAdmin ? <Panel /> : <NoAccess loggedIn={!!user} />
+  else body = ok ? <Panel /> : <Gate onOk={() => setOk(true)} />
   return (
     <section className="section bg-olive-50 page-view" id="admin">
-      <Container>{ok ? <Panel /> : <Gate onOk={() => setOk(true)} />}</Container>
+      <Container>{body}</Container>
     </section>
   )
 }

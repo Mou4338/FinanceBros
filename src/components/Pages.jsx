@@ -1,6 +1,7 @@
 import { Container, Row, Col, Button } from 'react-bootstrap'
 import { SERVICES } from './Services.jsx'
 import { LeadForm } from './Sections.jsx'
+import { IG_URL } from './Header.jsx'
 
 /* Banner at the top of every inner page */
 export function PageHeader({ crumb, title, sub, icon }) {
@@ -20,10 +21,67 @@ export function PageHeader({ crumb, title, sub, icon }) {
   )
 }
 
-/* Home: callback form */
+/* Home: intro (who we are) */
+export function HomeIntro() {
+  const pillars = [
+    ['bi-calculator', 'Understand', 'Free calculators and a health check show where you stand.'],
+    ['bi-chat-square-text', 'Decide', 'Talk it through with an expert before you sign anything.'],
+    ['bi-graph-up-arrow', 'Grow', 'Regular reviews as your income and goals change.'],
+  ]
+  return (
+    <section className="section intro" id="intro">
+      <Container>
+        <Row className="g-5 align-items-center">
+          <Col lg={6}>
+            <span className="eyebrow"><i className="bi bi-hand-thumbs-up" />Welcome to Finance Bros</span>
+            <h2 className="section-title mb-3">Money made simple, by two brothers who do this for a living.</h2>
+            <p className="lead-sm mb-4">
+              Loans, SIPs, insurance, tax — most people decide without anyone explaining the numbers honestly.
+              We're a Chartered Accountant and an MBA who started explaining money in plain Hinglish on Instagram,
+              and built Finance Bros so you can get that same clarity for your own finances.
+            </p>
+            <div className="intro-pillars mb-4">
+              {pillars.map(([i, t, d], n) => (
+                <div className="pillar" key={t}>
+                  <span className="pillar-n">{n + 1}</span>
+                  <div><div className="fw-bold"><i className={`bi ${i} me-2 text-olive`} />{t}</div><div className="small" style={{ color: 'var(--muted)' }}>{d}</div></div>
+                </div>
+              ))}
+            </div>
+            <div className="d-flex flex-wrap gap-2">
+              <Button className="btn-olive" href="#about">Meet the founders <i className="bi bi-arrow-right ms-1" /></Button>
+              <Button className="btn-ghost" href="#services">Explore services</Button>
+            </div>
+          </Col>
+          <Col lg={6}>
+            <div className="intro-card">
+              <div className="small fw-semibold mb-3" style={{ color: '#A9B0AB' }}>Founded by</div>
+              {[
+                ['CA', 'Chartered Accountant', 'Tax, accounts, loan documentation and compliance — done by the book.'],
+                ['MBA', 'Management & strategy', 'Goal-based planning, investing and comparing options like a business case.'],
+              ].map(([b, t, d]) => (
+                <div className="intro-row" key={b}>
+                  <span className="intro-badge">{b}</span>
+                  <div><div className="fw-bold text-white">{t}</div><div className="small" style={{ color: '#A9B0AB' }}>{d}</div></div>
+                </div>
+              ))}
+              <a className="intro-ig" href={IG_URL} target="_blank" rel="noreferrer">
+                <i className="bi bi-instagram" />
+                <span><strong>@finance.bros.in</strong><small>Simple Hinglish explainers on loans, SIPs and markets</small></span>
+                <i className="bi bi-arrow-up-right ms-auto" />
+              </a>
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    </section>
+  )
+}
+
+/* Home: callback form (closing section) */
 export function HomeForm({ onDone }) {
   return (
-    <section className="section" id="callback">
+    <section className="section bg-olive-50" id="callback">
       <Container>
         <Row className="g-5 align-items-center">
           <Col lg={5}>

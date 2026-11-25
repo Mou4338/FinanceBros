@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Container, Row, Col, Form, Button, Nav, Tab, Badge, Alert } from 'react-bootstrap'
 import { useStore, fmtDate, fmtSlot } from '../services/store.jsx'
 import { inr } from '../utils/finance.js'
+import PayButton from './PayButton.jsx'
 
 export const statusColor = { New: 'info', Contacted: 'primary', 'In progress': 'warning', Closed: 'secondary', Requested: 'warning', Confirmed: 'primary', Completed: 'success', Cancelled: 'secondary' }
 export function StatusBadge({ s }) { return <span className={`st st-${(statusColor[s] || 'secondary')}`}>{s}</span> }
@@ -18,7 +19,7 @@ function Timeline({ status }) {
 }
 
 function Auth() {
-  const { login, register } = useStore()
+  const { login, register, mode } = useStore()
   const [tab, setTab] = useState('login')
   const [err, setErr] = useState('')
   const [validated, setValidated] = useState(false)
@@ -43,7 +44,7 @@ function Auth() {
             <Nav.Item className="flex-fill"><Nav.Link eventKey="login" className="justify-content-center">Log in</Nav.Link></Nav.Item>
             <Nav.Item className="flex-fill"><Nav.Link eventKey="register" className="justify-content-center">Create account</Nav.Link></Nav.Item>
           </Nav>
-          {err && <Alert variant="danger" className="py-2">{err}</Alert>}
+          {err && <Alert variant={err.startsWith('Almost') ? 'success' : 'danger'} className="py-2">{err}</Alert>}
           <Form noValidate validated={validated} onSubmit={submit} key={tab}>
             <Row className="g-3">
               {tab === 'register' && <>
@@ -60,7 +61,7 @@ function Auth() {
               <Col xs={12}><Button type="submit" className="btn-olive w-100" size="lg">{tab === 'login' ? 'Log in' : 'Create free account'}</Button></Col>
             </Row>
           </Form>
-          <p className="small mt-3 mb-0" style={{ color: 'var(--muted)' }}>Demo mode: accounts are stored in this browser only. Bookings made with the same email appear in your dashboard.</p>
+          <p className="small mt-3 mb-0" style={{ color: 'var(--muted)' }}>{mode === 'demo' ? 'Demo mode: accounts are stored in this browser only. ' : ''}Bookings made with the same email appear in your dashboard.</p>
         </div>
       </Col>
     </Row>
@@ -112,7 +113,12 @@ function Dashboard({ onBook }) {
                           <StatusBadge s={b.status} />
                         </div>
                         <Timeline status={b.status} />
-                        {['Requested', 'Confirmed'].includes(b.status) && <Button size="sm" className="btn-ghost mt-2" onClick={() => setBooking(b.id, { status: 'Cancelled' })}>Cancel booking</Button>}
+                        {['Requested', 'Confirmed'].includes(b.status) && (
+                          <div className="d-flex flex-wrap gap-2 mt-2">
+                            <Button size="sm" className="btn-ghost" onClick={() => setBooking(b.id, { status: 'Cancelled' }).catch(() => {})}>Cancel booking</Button>
+                            <PayButton booking={b} />
+                          </div>
+                        )}
                       </div>
                     ))}</div>}
                 </Tab.Pane>

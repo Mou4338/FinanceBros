@@ -35,29 +35,39 @@ export function WhyWeAsk() {
 }
 
 export default function BookingModal({ show, onHide, topic, onBooked }) {
-  const { user, addBooking, takenSlots } = useStore()
+  const { user, addBooking, getTakenSlots, mode } = useStore()
   const days = useMemo(nextDays, [show])
   const [step, setStep] = useState(1)
   const [f, setF] = useState({})
   const [validated, setValidated] = useState(false)
   const [done, setDone] = useState(null)
+  const [taken, setTaken] = useState([])
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
 
   useEffect(() => {
     if (show) {
-      setStep(1); setDone(null); setValidated(false)
+      setStep(1); setDone(null); setValidated(false); setErr('')
       setF({ service: SERVICE_OPTIONS.includes(topic) ? topic : '', mode: 'Phone call', date: key(days[0]), slot: '', name: user?.name || '', phone: user?.phone || '', email: user?.email || '', notes: '', consent: false })
     }
   }, [show]) // eslint-disable-line
 
   const set = (k) => (v) => setF((o) => ({ ...o, [k]: v }))
-  const taken = takenSlots(f.date || '')
+  useEffect(() => {
+    let on = true
+    if (show && f.date) getTakenSlots(f.date).then((t) => on && setTaken(t)).catch(() => on && setTaken([]))
+    return () => { on = false }
+  }, [show, f.date]) // eslint-disable-line
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault()
     if (!e.currentTarget.checkValidity()) { setValidated(true); return }
-    const rec = addBooking({ service: f.service, mode: f.mode, date: f.date, slot: f.slot, name: f.name, phone: f.phone, email: f.email, notes: f.notes })
-    setDone(rec)
-    onBooked?.(rec)
+    setBusy(true); setErr('')
+    try {
+      const rec = await addBooking({ service: f.service, mode: f.mode, date: f.date, slot: f.slot, name: f.name, phone: f.phone, email: f.email.trim().toLowerCase(), notes: f.notes })
+      setDone(rec)
+      onBooked?.(rec)
+    } catch (x) { setErr(x.message || 'Something went wrong. Please try again.') } finally { setBusy(false) }
   }
 
   const steps = ['Topic', 'Date & time', 'Your details']
@@ -73,7 +83,7 @@ export default function BookingModal({ show, onHide, topic, onBooked }) {
             <h4 className="mb-1">Reference {done.ref}</h4>
             <p style={{ color: 'var(--muted)' }}>{done.service} · {done.mode} · {new Date(done.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}, {fmtSlot(done.slot)}</p>
             <div className="note text-start mb-3">Status: <strong>Requested</strong>. Our team confirms the slot by phone or WhatsApp. {user ? 'You can track it under My Account.' : 'Create a free account with the same email to track it.'}</div>
-            <p className="small" style={{ color: 'var(--muted)' }}>Demo mode: the booking is saved in this browser only until the backend is connected.</p>
+            {mode === 'demo' && <p className="small" style={{ color: 'var(--muted)' }}>Demo mode: the booking is saved in this browser only until the backend is connected.</p>}
             <div className="d-flex gap-2 justify-content-center flex-wrap">
               <Button className="btn-ghost" onClick={() => { navigator.clipboard?.writeText(done.ref).catch(() => {}) }}><i className="bi bi-clipboard me-2" />Copy reference</Button>
               <Button className="btn-olive" href="#account" onClick={onHide}>Go to My Account</Button>
@@ -144,10 +154,11 @@ export default function BookingModal({ show, onHide, topic, onBooked }) {
                         label="I agree to be contacted about this booking and accept the Privacy Policy." feedback="Consent is needed to book." feedbackType="invalid" />
                     </Col>
                   </Row>
+                  {err && <div className="alert alert-danger py-2 mt-3 mb-0">{err}</div>}
                   <div className="summary-line my-3"><i className="bi bi-calendar-event me-2" />{f.service} · {f.mode} · {new Date(f.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}, {fmtSlot(f.slot)}</div>
                   <div className="d-flex gap-2">
                     <Button className="btn-ghost" onClick={() => setStep(2)}>Back</Button>
-                    <Button type="submit" className="btn-olive flex-grow-1"><i className="bi bi-check2-circle me-2" />Confirm booking request</Button>
+                    <Button type="submit" className="btn-olive flex-grow-1" disabled={busy}><i className="bi bi-check2-circle me-2" />{busy ? 'Booking…' : 'Confirm booking request'}</Button>
                   </div>
                 </>
               )}

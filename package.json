@@ -1,5 +1,5 @@
 {
-  "name": "financebros",
+  "name": "finance-bros",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:single": "vite build --mode single"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.119.2",
     "bootstrap": "^5.3.9",
     "bootstrap-icons": "^1.13.2",
     "react": "^19.3.1",
