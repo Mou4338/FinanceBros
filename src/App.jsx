@@ -12,7 +12,6 @@ import Admin from './components/Admin.jsx'
 import { LearningCentre, LegalModal } from './components/Learn.jsx'
 import { Journey, Pricing, Faq, Contact, Footer } from './components/Sections.jsx'
 import About from './components/About.jsx'
-import Reels from './components/Reels.jsx'
 import { PageHeader, HomeIntro, HomeForm, HomeServices, HomeTools, PageCta } from './components/Pages.jsx'
 import { openTool } from './utils/toolNav.js'
 import { useStore, SERVICE_OPTIONS } from './services/store.jsx'
@@ -81,7 +80,6 @@ export default function App() {
           <HomeIntro />
           <HomeServices setService={setService} />
           <Features />
-          <Reels />
           <HomeTools />
           <Journey />
           <HomeForm onDone={enquiryDone} />
@@ -105,7 +103,6 @@ export default function App() {
         {page === 'learn' && <>
           <PageHeader crumb="Learn" icon="bi-book" title="Learning centre" sub="Short, jargon-free guides on loans, investing, tax and insurance." />
           <LearningCentre onBook={openBook} onTool={(k) => (k === 'health' ? (window.location.hash = 'health-check') : openTool(k))} />
-          <Reels compact />
           <PageCta onBook={() => openBook()} />
         </>}
         {page === 'pricing' && <>
