@@ -486,3 +486,70 @@ export const PLAN_CATALOGUE = [
     "fromPrice": true
   }
 ]
+
+// Every individual service → [entry package (lowest price), complete package or null].
+// Prices are read from the packages above, so editing a price in the admin panel updates these too.
+export const ITEM_PRICING = {
+  // Loans & credit
+  'Personal loan': ['loan-call', 'loan-assist'],
+  'Home loan': ['loan-call', 'home-compare'],
+  'Business loan': ['loan-call', 'business-loan'],
+  'Loan against property': ['loan-call', 'loan-assist'],
+  'Education loan': ['loan-call', 'loan-assist'],
+  'Vehicle loan': ['loan-call', 'loan-assist'],
+  'Debt consolidation': ['loan-call', 'debt-plan'],
+  'Balance transfer': ['loan-call', 'home-compare'],
+  'Credit cards': ['loan-call', null],
+  'Credit score guidance': ['free', 'credit-fix'],
+  // SIP & mutual funds
+  'SIP planning': ['sip-start', 'goal-sip'],
+  'SIP review': ['sip-review', 'mf-cleanup'],
+  'Lumpsum planning': ['sip-start', 'goal-sip'],
+  'Mutual fund education': ['free', 'sip-start'],
+  'Fund comparison': ['sip-review', 'mf-cleanup'],
+  'ELSS education': ['free', 'elss-setup'],
+  'Debt & hybrid funds': ['free', 'sip-start'],
+  'Index funds': ['free', 'sip-start'],
+  'Step-up SIP planning': ['sip-start', 'goal-sip'],
+  'Goal-based investing': ['sip-start', 'goal-sip'],
+  // Investment & portfolio
+  'Portfolio health check': ['free', 'report'],
+  'Asset allocation': ['rebalance', 'report'],
+  'Risk assessment': ['free', 'report'],
+  'Stock portfolio review': ['report', 'wealth-annual'],
+  'Mutual fund review': ['sip-review', 'report'],
+  'Retirement portfolio': ['report', 'wealth-annual'],
+  'Wealth planning': ['report', 'wealth-annual'],
+  'Portfolio tracking': ['report', 'wealth-annual'],
+  'Rebalancing education': ['free', 'rebalance'],
+  'Tax efficiency education': ['free', 'tax-check'],
+  // Financial planning
+  'Budget creation': ['consult', 'plan-full'],
+  'Emergency fund': ['consult', 'family-kit'],
+  'Retirement planning': ['consult', 'retire-plan'],
+  "Children's education": ['consult', 'child-plan'],
+  'Marriage & home purchase': ['consult', 'child-plan'],
+  'Debt repayment plan': ['consult', 'debt-plan'],
+  'Tax regime comparison': ['free', 'tax-check'],
+  'Insurance needs': ['consult', 'ins-review'],
+  'Savings & wealth plan': ['consult', 'plan-full'],
+  'Net worth tracking': ['free', 'annual'],
+  // Insurance & tax
+  'Term life insurance': ['ins-review', 'term-health'],
+  'Health insurance': ['ins-review', 'term-health'],
+  'Critical illness cover': ['ins-review', 'term-health'],
+  'Personal accident cover': ['ins-review', 'term-health'],
+  'Existing policy review': ['ins-review', null],
+  'Claim process guidance': ['ins-review', 'claim-help'],
+  'Tax planning': ['tax-check', 'itr'],
+  'ITR assistance': ['itr', 'itr-cg'],
+  'Credit card consulting': ['loan-call', null],
+  'Financial literacy': ['free', null],
+}
+
+// Find a package in the live list; fall back to the catalogue if the database doesn't have it yet
+export function findPlan(plans, id) {
+  if (!id) return null
+  return plans.find((p) => p.id === id) || PLAN_CATALOGUE.find((p) => p.id === id) || null
+}
+export const priceLabel = (p) => (!p ? '—' : Number(p.price) === 0 ? 'Free' : `${p.fromPrice || p.id === 'itr' || p.id === 'itr-cg' ? 'from ' : ''}₹${Number(p.price).toLocaleString('en-IN')}`)

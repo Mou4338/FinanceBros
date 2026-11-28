@@ -12,7 +12,7 @@ import Admin from './components/Admin.jsx'
 import { LearningCentre, LegalModal } from './components/Learn.jsx'
 import { Journey, Pricing, Faq, Contact, Footer } from './components/Sections.jsx'
 import About from './components/About.jsx'
-import { PageHeader, HomeIntro, HomeForm, HomeServices, HomeTools, PageCta } from './components/Pages.jsx'
+import { PageHeader, HomeIntro, HomeForm, HomeServices, HomeTools, PageCta, HomeLifeEvents, HomeCompare, HomeGuides } from './components/Pages.jsx'
 import { openTool } from './utils/toolNav.js'
 import { useStore, SERVICE_OPTIONS } from './services/store.jsx'
 
@@ -79,9 +79,13 @@ export default function App() {
           <StatsStrip />
           <HomeIntro />
           <HomeServices setService={setService} />
+          <HomeLifeEvents onBook={openBook} />
           <Features />
+          <HomeCompare />
           <HomeTools />
+          <HomeGuides />
           <Journey />
+          <Faq />
           <HomeForm onDone={enquiryDone} />
         </>}
         {page === 'services' && <>

@@ -11,7 +11,7 @@ export const LEARN_SERVICES = [
   { key: 'basics', title: 'Money basics', icon: 'bi-lightbulb', topic: 'Other' },
 ]
 
-const ARTICLES = [
+export const ARTICLES = [
   /* ---------- Loans & credit ---------- */
   { id: 'emi-truth', service: 'loans', min: 4, title: 'The real cost of a home loan EMI', sum: 'Why the first years are mostly interest, and what a small prepayment does.', tool: ['emi', 'EMI calculator'],
     body: [

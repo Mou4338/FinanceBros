@@ -2,6 +2,7 @@ import { Container, Row, Col, Tab, Nav, Button, Accordion } from 'react-bootstra
 import { useStore } from '../services/store.jsx'
 import { openTool } from '../utils/toolNav.js'
 import { inr } from '../utils/finance.js'
+import { ITEM_PRICING, findPlan, priceLabel } from '../services/plans.js'
 
 export const SERVICES = [
   {
@@ -210,6 +211,8 @@ function Clarity({ k, onBook }) {
 }
 
 export default function Services({ active, setActive, onBook }) {
+  const { data } = useStore()
+  const entry = (t) => findPlan(data.plans, ITEM_PRICING[t]?.[0])
   return (
     <section className="section bg-olive-50" id="services">
       <Container>
@@ -248,9 +251,10 @@ export default function Services({ active, setActive, onBook }) {
                       <Row className="g-3 mb-4">
                         {s.items.map(([t, d]) => (
                           <Col sm={6} xl={4} key={t}>
-                            <div className="svc-item">
+                            <div className="svc-item d-flex flex-column">
                               <h6><i className="bi bi-check2-circle text-olive me-1" />{t}</h6>
-                              <p>{d}</p>
+                              <p className="flex-grow-1">{d}</p>
+                              {entry(t) && <span className="item-price">{Number(entry(t).price) === 0 ? 'Start free' : `From ${priceLabel(entry(t)).replace('from ', '')}`}</span>}
                             </div>
                           </Col>
                         ))}

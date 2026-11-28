@@ -3,6 +3,8 @@ import { Container, Row, Col, Button, Accordion, Form, Badge } from 'react-boots
 import { Brand, IG_URL } from './Header.jsx'
 import { useStore, SERVICE_OPTIONS } from '../services/store.jsx'
 import { WhyWeAsk } from './Booking.jsx'
+import { SERVICES } from './Services.jsx'
+import { ITEM_PRICING, findPlan, priceLabel } from '../services/plans.js'
 
 /* ---------- How it works ---------- */
 const STEPS = [
@@ -107,7 +109,38 @@ export function Pricing({ onBook }) {
             </div>
           )
         })}
-        <p className="text-center small mb-0" style={{ color: 'var(--muted)' }}>Prices include GST where applicable. Launch pricing, which may change.</p>
+        <div className="mt-2 mb-4" id="price-list">
+          <div className="text-center mb-4">
+            <span className="eyebrow"><i className="bi bi-list-check" />Price list</span>
+            <h3 className="section-title" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.2rem)' }}>Starting price for every service</h3>
+            <p className="lead-sm mx-auto mb-0">The lowest-priced way to get help with each service, and the complete package if you want us to handle it end to end.</p>
+          </div>
+          <Row className="g-4">
+            {SERVICES.filter((v) => svc === 'all' || v.key === svc).map((v) => (
+              <Col lg={svc === 'all' ? 6 : 12} key={v.key}>
+                <div className="price-list">
+                  <div className="pl-head"><i className={`bi ${v.icon}`} />{v.title}</div>
+                  <table className="table mb-0 stack pl-table">
+                    <thead><tr><th>Service</th><th>Starts at</th><th>Complete package</th></tr></thead>
+                    <tbody>
+                      {v.items.map(([t]) => {
+                        const [e, f] = (ITEM_PRICING[t] || []).map((id) => findPlan(plans, id))
+                        return (
+                          <tr key={t}>
+                            <td className="fw-semibold">{t}</td>
+                            <td><span className={`pl-price ${e && Number(e.price) === 0 ? 'free' : ''}`}>{priceLabel(e)}</span>{e && Number(e.price) > 0 && <div className="small text-muted">{e.name}</div>}{e && Number(e.price) === 0 && <div className="small text-muted">Calculators & guides</div>}</td>
+                            <td>{f ? <><span className="pl-price">{priceLabel(f)}</span> <small className="text-muted">{f.per}</small><div className="small text-muted">{f.name}</div></> : <span className="text-muted small">Covered in the session</span>}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </Col>
+            ))}
+          </Row>
+        </div>
+        <p className="text-center small mb-0" style={{ color: 'var(--muted)' }}>Prices include GST where applicable. Launch pricing, which may change. Your first 15-minute call is always free.</p>
       </Container>
     </section>
   )

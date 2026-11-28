@@ -3,6 +3,7 @@ import { Container, Row, Col, Form, Nav, Tab, Button } from 'react-bootstrap'
 import { ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts'
 import { BalanceTransferCalc, PrepaymentCalc, CardPayoffCalc, CagrCalc, FdCalc, InflationCalc, PpfCalc, NetWorthCalc, TaxRegimeCalc } from './MoreCalculators.jsx'
 import { takePendingTool } from '../utils/toolNav.js'
+import { XirrCalc, DebtPayoffCalc, AffordCalc, EpfCalc, GratuityCalc } from './ToolsMore.jsx'
 import { RentBuyCalc, FlatRateCalc, SwpCalc, ChildEduCalc, HraCalc, CapGainsCalc, TermCoverCalc, SipDelayCalc } from './ToolsExtra.jsx'
 import { PaymentMethodTool, UnclaimedTool, IpoTool, BeforeInvestTool, FamilyTool, ClaimTool, LifeStageTool, MfChecksTool } from './Checklists.jsx'
 import { emi, amortisation, sip, lumpsum, retirement, eligibility, inr, inrShort } from '../utils/finance.js'
@@ -345,10 +346,13 @@ export const TOOL_GROUPS = [
     ['card', 'bi-credit-card', 'Credit card payoff', CardPayoffCalc],
     ['rentbuy', 'bi-houses', 'Rent vs buy a home', RentBuyCalc],
     ['flatrate', 'bi-exclamation-diamond', 'Flat vs reducing rate', FlatRateCalc],
+    ['afford', 'bi-house-check', 'How much home can I afford?', AffordCalc],
+    ['debtplan', 'bi-ladder', 'Debt payoff planner', DebtPayoffCalc],
   ] },
   { name: 'Investing', icon: 'bi-graph-up-arrow', tools: [
     ['sip', 'bi-graph-up-arrow', 'SIP, step-up & lumpsum', SipCalc],
     ['cagr', 'bi-percent', 'CAGR', CagrCalc],
+    ['xirr', 'bi-calendar-range', 'XIRR (SIP returns)', XirrCalc],
     ['fd', 'bi-safe', 'FD / compound interest', FdCalc],
     ['inflation', 'bi-cart', 'Inflation', InflationCalc],
     ['delay', 'bi-hourglass-split', 'Cost of delaying your SIP', SipDelayCalc],
@@ -368,6 +372,8 @@ export const TOOL_GROUPS = [
     ['cg', 'bi-graph-down-arrow', 'Mutual fund capital gains tax', CapGainsCalc],
     ['term', 'bi-shield-check', 'Term insurance cover', TermCoverCalc],
     ['ppf', 'bi-piggy-bank', 'PPF', PpfCalc],
+    ['epf', 'bi-briefcase', 'EPF corpus', EpfCalc],
+    ['gratuity', 'bi-award', 'Gratuity', GratuityCalc],
   ] },
   { name: 'Money checklists', icon: 'bi-ui-checks', tools: [
     ['invest4', 'bi-question-circle', '4 questions before you invest', BeforeInvestTool],

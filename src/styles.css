@@ -552,3 +552,31 @@ h1, h2, h3, h4, h5 { color: var(--c-ink); }
 .cl-tool:hover{background:#111;color:#fff;border-color:#111}
 .cl-faq .accordion-button{font-weight:600}
 .cl-price{background:#F2F6F3;border:1px solid #DCE7E0;border-radius:14px;padding:16px 18px}
+
+/* ---------- per-service price list ---------- */
+.item-price { align-self: flex-start; margin-top: 8px; font-size: .78rem; font-weight: 700; color: var(--c-forest); background: var(--c-green-tint); padding: 3px 10px; border-radius: 999px; }
+.price-list { background: #fff; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow-sm); height: 100%; }
+.pl-head { background: var(--c-ink); color: #fff; font-weight: 800; padding: 12px 18px; display: flex; gap: 10px; align-items: center; }
+.pl-head i { color: var(--c-sage); }
+.pl-table { font-size: .9rem; }
+.pl-table th { font-size: .75rem; color: var(--muted); font-weight: 700; background: var(--c-grey); }
+.pl-table td, .pl-table th { padding: 10px 14px; vertical-align: top; }
+.pl-price { font-weight: 800; color: var(--c-ink); white-space: nowrap; }
+.pl-price.free { color: var(--c-forest); }
+.debt-table { min-width: 520px; font-size: .88rem; }
+.debt-table th { font-size: .75rem; color: var(--muted); }
+
+/* ---------- home: life events, compare ---------- */
+.event-card { height: 100%; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; box-shadow: var(--shadow-sm); transition: .2s; }
+.event-card:hover { border-color: var(--c-forest); box-shadow: var(--shadow); transform: translateY(-3px); }
+.ev-link { border: 1px solid var(--line); background: var(--c-grey); color: var(--c-ink); border-radius: 999px; padding: 6px 12px; font-size: .8rem; font-weight: 700; min-height: 36px; }
+.ev-link:hover { background: var(--c-forest); border-color: var(--c-forest); color: #fff; }
+.compare-wrap { background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow-sm); }
+.compare-table { min-width: 620px; font-size: .92rem; }
+.compare-table th, .compare-table td { padding: 14px 16px; vertical-align: middle; }
+.compare-table th { font-size: .82rem; color: var(--muted); font-weight: 700; background: var(--c-grey); }
+.compare-table .hl { background: var(--c-green-tint); }
+.compare-table th.hl { color: var(--c-forest); font-weight: 800; }
+.c-yes { color: var(--c-forest); font-weight: 700; white-space: nowrap; }
+.c-some { color: #8a6d0b; white-space: nowrap; }
+.c-no { color: #9a3b3b; white-space: nowrap; }

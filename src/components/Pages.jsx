@@ -3,6 +3,8 @@ import { SERVICES } from './Services.jsx'
 import { LeadForm } from './Sections.jsx'
 import { IG_URL } from './Header.jsx'
 import { openTool } from '../utils/toolNav.js'
+import { useStore } from '../services/store.jsx'
+import { ARTICLES, LEARN_SERVICES } from './Learn.jsx'
 
 /* Banner at the top of every inner page */
 export function PageHeader({ crumb, title, sub, icon }) {
@@ -113,6 +115,11 @@ export function HomeForm({ onDone }) {
 
 /* Home: services overview cards */
 export function HomeServices({ setService }) {
+  const { data } = useStore()
+  const fromPrice = (k) => {
+    const ps = data.plans.filter((p) => p.service === k && Number(p.price) > 0).map((p) => Number(p.price))
+    return ps.length ? Math.min(...ps) : null
+  }
   return (
     <section className="section bg-olive-50">
       <Container>
@@ -130,7 +137,10 @@ export function HomeServices({ setService }) {
                 <span className="feature-icon"><i className={`bi ${s.icon}`} /></span>
                 <span className="h5 d-block mt-3 mb-2">{s.title}</span>
                 <span className="small d-block" style={{ color: 'var(--muted)' }}>{s.intro}</span>
-                <span className="small fw-bold text-olive mt-3 d-inline-block">Explore <i className="bi bi-arrow-right" /></span>
+                <span className="d-flex justify-content-between align-items-center mt-3 gap-2 flex-wrap">
+                  <span className="small fw-bold text-olive">Explore <i className="bi bi-arrow-right" /></span>
+                  {fromPrice(s.key) && <span className="item-price mt-0">From ₹{fromPrice(s.key).toLocaleString('en-IN')}</span>}
+                </span>
               </a>
             </Col>
           ))}
@@ -156,7 +166,7 @@ export function HomeTools() {
         <div className="tools-band">
           <Row className="g-4 align-items-center">
             <Col lg={4}>
-              <span className="eyebrow"><i className="bi bi-calculator" />33 free tools</span>
+              <span className="eyebrow"><i className="bi bi-calculator" />38 free tools</span>
               <h2 className="section-title text-white mb-3">Run your numbers before you decide.</h2>
               <p className="mb-4" style={{ color: '#A9B0AB' }}>Free, private, and calculated in your browser.</p>
               <Button className="btn-lime" href="#calculators">Open calculators <i className="bi bi-arrow-right ms-1" /></Button>
@@ -198,6 +208,123 @@ export function PageCta({ onBook }) {
             <Col md={5} className="text-md-end"><Button className="btn-lime" size="lg" onClick={onBook}>Book a free call <i className="bi bi-arrow-right ms-1" /></Button></Col>
           </Row>
         </div>
+      </Container>
+    </section>
+  )
+}
+
+/* Home: help for life events */
+const EVENTS = [
+  ['bi-cash-coin', 'First salary', 'Budget, emergency fund and your first SIP, set up the right way from month one.', 'budget', 'Budget planner', 'Financial planning'],
+  ['bi-house-heart', 'Buying a home', 'How much you can really afford, the best loan offer and the true cost of the EMI.', 'afford', 'Home affordability', 'Home loan'],
+  ['bi-heart', 'Getting married', 'Merge money goals, plan the wedding budget and update nominees and insurance.', 'goal', 'Savings goal', 'Financial planning'],
+  ['bi-balloon-heart', 'A new baby', 'Term and health cover for the family, and a plan for education costs.', 'child', 'Child education', 'Insurance'],
+  ['bi-briefcase', 'Changing jobs', 'Transfer your EPF (don’t withdraw), check gratuity, and update your SIPs.', 'gratuity', 'Gratuity', 'Financial planning'],
+  ['bi-ladder', 'Stuck in debt', 'An order to repay cards and loans that costs the least, and options to lower rates.', 'debtplan', 'Debt payoff planner', 'Personal loan'],
+  ['bi-gift', 'Bonus or windfall', 'Prepay a loan, invest a lump sum, or both? Compare on your numbers.', 'prepay', 'Prepayment savings', 'SIP & mutual funds'],
+  ['bi-sunset', 'Nearing retirement', 'Your retirement number, and a steady monthly income from your savings.', 'swp', 'SWP monthly income', 'Financial planning'],
+]
+export function HomeLifeEvents({ onBook }) {
+  return (
+    <section className="section">
+      <Container>
+        <Row className="align-items-end g-3 mb-4">
+          <Col lg={8}>
+            <span className="eyebrow"><i className="bi bi-signpost" />Life moments</span>
+            <h2 className="section-title mb-2">Big money decision coming up? Start here.</h2>
+            <p className="lead-sm mb-0">Every life stage has a few money moves that matter most. Try the free tool, or talk it through with us.</p>
+          </Col>
+        </Row>
+        <Row className="g-3">
+          {EVENTS.map(([icon, t, d, tool, toolName, topic]) => (
+            <Col sm={6} lg={3} key={t}>
+              <div className="event-card">
+                <span className="feature-icon"><i className={`bi ${icon}`} /></span>
+                <h3 className="h6 fw-bold mt-3 mb-1">{t}</h3>
+                <p className="small mb-3" style={{ color: 'var(--muted)' }}>{d}</p>
+                <div className="d-flex flex-wrap gap-2 mt-auto">
+                  <button type="button" className="ev-link" onClick={() => openTool(tool)}><i className="bi bi-calculator me-1" />{toolName}</button>
+                  <button type="button" className="ev-link" onClick={() => onBook(topic)}><i className="bi bi-telephone me-1" />Talk to us</button>
+                </div>
+              </div>
+            </Col>
+          ))}
+        </Row>
+      </Container>
+    </section>
+  )
+}
+
+/* Home: how we compare */
+const COMPARE = [
+  ['Explains the numbers in plain Hinglish', 'yes', 'some', 'no'],
+  ['Free calculators before you pay anything', 'yes', 'no', 'some'],
+  ['Compares options across banks and fund houses', 'yes', 'no', 'some'],
+  ['Shows total cost (fees, interest) up front', 'yes', 'some', 'some'],
+  ['Fees and commissions disclosed before you act', 'yes', 'some', 'na'],
+  ['A plan for all your goals, not one product', 'yes', 'no', 'some'],
+]
+const MARK = { yes: ['bi-check-circle-fill', 'Yes', 'c-yes'], some: ['bi-dash-circle', 'Sometimes', 'c-some'], no: ['bi-x-circle', 'Rarely', 'c-no'], na: ['bi-dash', '—', 'c-some'] }
+export function HomeCompare() {
+  return (
+    <section className="section bg-olive-50">
+      <Container>
+        <Row className="g-5 align-items-center">
+          <Col lg={4}>
+            <span className="eyebrow"><i className="bi bi-columns-gap" />Why people choose us</span>
+            <h2 className="section-title mb-3">Independent help, not a sales desk.</h2>
+            <p className="lead-sm mb-0">A bank relationship manager usually offers that bank's products. Doing it alone means hours of research. We sit in between: clear numbers, options compared, and fees shown before you decide.</p>
+          </Col>
+          <Col lg={8}>
+            <div className="compare-wrap scroll">
+              <table className="table compare-table mb-0">
+                <thead><tr><th></th><th className="hl">Finance Bros</th><th>Bank relationship manager</th><th>Doing it alone</th></tr></thead>
+                <tbody>
+                  {COMPARE.map(([row, ...cells]) => (
+                    <tr key={row}>
+                      <td className="fw-semibold">{row}</td>
+                      {cells.map((c, i) => { const [ic, label, cls] = MARK[c]; return <td key={i} className={i === 0 ? 'hl' : ''}><span className={cls}><i className={`bi ${ic} me-1`} />{label}</span></td> })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="small mt-2 mb-0" style={{ color: 'var(--muted)' }}>A general comparison of typical experiences, not a rating of any specific bank or person.</p>
+          </Col>
+        </Row>
+      </Container>
+    </section>
+  )
+}
+
+/* Home: latest guides */
+const PICKS = ['regime', 'sip-basics', 'emi-truth']
+export function HomeGuides() {
+  const picks = PICKS.map((id) => ARTICLES.find((a) => a.id === id)).filter(Boolean)
+  const list = picks.length === 3 ? picks : ARTICLES.slice(0, 3)
+  const svc = (k) => LEARN_SERVICES.find((s) => s.key === k)
+  return (
+    <section className="section">
+      <Container>
+        <Row className="align-items-end g-3 mb-4">
+          <Col lg={8}>
+            <span className="eyebrow"><i className="bi bi-book" />Learning centre · {ARTICLES.length} guides</span>
+            <h2 className="section-title mb-0">Popular guides this month</h2>
+          </Col>
+          <Col lg={4} className="text-lg-end"><Button className="btn-ghost" href="#learn">All guides <i className="bi bi-arrow-right ms-1" /></Button></Col>
+        </Row>
+        <Row className="g-4">
+          {list.map((a) => (
+            <Col md={4} key={a.id}>
+              <a className="guide d-block text-decoration-none" href="#learn">
+                <span className="small fw-semibold d-block" style={{ color: 'var(--c-forest)' }}><i className={`bi ${svc(a.service)?.icon} me-1`} />{svc(a.service)?.title} · {a.min} min read</span>
+                <span className="h5 d-block mt-2 mb-2">{a.title}</span>
+                <span className="small d-block" style={{ color: 'var(--muted)' }}>{a.sum}</span>
+                <span className="fw-bold small text-olive mt-3 d-inline-block">Read in the learning centre <i className="bi bi-arrow-right" /></span>
+              </a>
+            </Col>
+          ))}
+        </Row>
       </Container>
     </section>
   )
